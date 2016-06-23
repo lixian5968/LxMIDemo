@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/textViewAlreadyRead"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
+    android:layout_marginBottom="3dip"
+    android:background="@color/transparent"
+    android:text="@string/readed"
+    android:textColor="#666666"
+    android:textSize="12sp"
+    android:visibility="gone"/>
+<!-- From: file:/E:/Android_yjm_black/Android_coding/NIM_Android_Demo_v2.4.0/Android_ntfinace/uikit/res/layout/nim_read_recipt_layout.xml --><!-- From: file:/E:/Android_yjm_black/Android_coding/NIM_Android_Demo_v2.4.0/Android_ntfinace/uikit/build/intermediates/bundles/debug/res/layout/nim_read_recipt_layout.xml -->

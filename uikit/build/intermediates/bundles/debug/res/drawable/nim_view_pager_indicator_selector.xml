@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:drawable="@drawable/nim_moon_page_selected" android:state_selected="true"/>
+    <item android:drawable="@drawable/nim_moon_page_unselected"/>
+
+</selector><!-- From: file:/E:/Android_yjm_black/Android_coding/NIM_Android_Demo_v2.4.0/Android_ntfinace/uikit/res/drawable/nim_view_pager_indicator_selector.xml -->

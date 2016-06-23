@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:drawable="@drawable/nim_cameras" android:state_pressed="false"/>
+    <item android:drawable="@drawable/nim_cameras_hover" android:state_pressed="true"/>
+
+</selector><!-- From: file:/E:/Android_yjm_black/Android_coding/NIM_Android_Demo_v2.4.0/Android_ntfinace/uikit/res/drawable/nim_cameras_selector.xml -->
