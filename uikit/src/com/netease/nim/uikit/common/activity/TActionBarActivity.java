@@ -13,18 +13,27 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
+import com.netease.nim.uikit.BaseApplication;
 import com.netease.nim.uikit.common.fragment.TFragment;
-import com.netease.nim.uikit.common.util.sys.ReflectionUtil;
 import com.netease.nim.uikit.common.util.log.LogUtil;
+import com.netease.nim.uikit.common.util.sys.ReflectionUtil;
+import com.zongbutech.httplib.http.API.NtfinaceApi;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import okhttp3.OkHttpClient;
 
 public abstract class TActionBarActivity extends ActionBarActivity {
 
     private boolean destroyed = false;
 
     private static Handler handler;
+
+    public Context ct;
+    public OkHttpClient mOkHttpClient;
+    public NtfinaceApi mNtfinaceApi;
+    public NtfinaceApi mNtfinaceApiYang;
 
     @Override
     protected void onStart() {
@@ -33,6 +42,9 @@ public abstract class TActionBarActivity extends ActionBarActivity {
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ct = this;
+        mNtfinaceApi = ((BaseApplication) ct.getApplicationContext()).mNtfinaceApi;
+        mNtfinaceApiYang = ((BaseApplication) ct.getApplicationContext()).mNtfinaceApiYang;
 
         LogUtil.ui("activity: " + getClass().getSimpleName() + " onCreate()");
     }

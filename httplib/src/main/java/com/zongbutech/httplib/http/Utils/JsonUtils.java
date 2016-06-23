@@ -17,7 +17,7 @@ import java.lang.reflect.Type;
 public class JsonUtils {
 
     private static Gson mGson =new GsonBuilder()
-            .setDateFormat("yyyy-MM-dd HH:mm:ss")
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
             .create();
 
 

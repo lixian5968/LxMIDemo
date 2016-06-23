@@ -1,6 +1,7 @@
 package com.zongbutech.httplib.http.Utils;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
 
 import com.zongbutech.httplib.cookie.ClearableCookieJar;
 import com.zongbutech.httplib.cookie.PersistentCookieJar;
@@ -23,5 +24,15 @@ public class OkHttpClientServer {
             mOkHttpClient = builder.cookieJar(cookieJar).build();
         }
         return mOkHttpClient;
+    }
+
+
+
+    public static boolean isOpenNetwork(Context ct) {
+        ConnectivityManager connManager = (ConnectivityManager) ct.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connManager.getActiveNetworkInfo() != null) {
+            return connManager.getActiveNetworkInfo().isAvailable();
+        }
+        return false;
     }
 }

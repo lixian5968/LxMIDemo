@@ -44,7 +44,6 @@
                         android:hint="@string/login_hint_account"
                         android:paddingLeft="15dp"
                         android:paddingRight="15dp"
-                        android:text="576a5f8ea957f19907c3b580"
                         android:textColor="@color/white"
                         android:textColorHint="@color/color_white_66ffffff"
                         android:textCursorDrawable="@null"

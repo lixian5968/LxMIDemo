@@ -17,6 +17,7 @@ import android.view.View.OnKeyListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.JsonObject;
 import com.netease.nim.uikit.cache.DataCacheManager;
 import com.netease.nim.uikit.common.activity.TActionBarActivity;
 import com.netease.nim.uikit.common.ui.dialog.DialogMaker;
@@ -35,12 +36,19 @@ import com.netease.nimlib.sdk.ResponseCode;
 import com.netease.nimlib.sdk.auth.AuthService;
 import com.netease.nimlib.sdk.auth.ClientType;
 import com.netease.nimlib.sdk.auth.LoginInfo;
+import com.zongbutech.httplib.http.Bean.UserInfo;
 import com.zongbutech.ntfinance.DemoCache;
 import com.zongbutech.ntfinance.R;
 import com.zongbutech.ntfinance.config.preference.Preferences;
 import com.zongbutech.ntfinance.config.preference.UserPreferences;
 import com.zongbutech.ntfinance.contact.ContactHttpClient;
 import com.zongbutech.ntfinance.main.activity.MainActivity;
+
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 /**
  * 登录/注册界面
@@ -210,6 +218,8 @@ public class LoginActivity extends TActionBarActivity implements OnKeyListener {
     /**
      * ***************************************** 登录 **************************************
      */
+    String YangToken = "";
+    String YangUserId = "";
 
     private void login() {
         DialogMaker.showProgressDialog(this, null, getString(R.string.logining), true, new DialogInterface.OnCancelListener() {
@@ -229,10 +239,48 @@ public class LoginActivity extends TActionBarActivity implements OnKeyListener {
 //        final String account = loginAccountEdit.getEditableText().toString().toLowerCase();
 //        final String token = tokenFromPassword(loginPasswordEdit.getEditableText().toString());
 
+        JsonObject object = new JsonObject();
+        object.addProperty("mobilePhone", loginAccountEdit.getEditableText().toString());
+        object.addProperty("password", loginPasswordEdit.getEditableText().toString());
+        mNtfinaceApiYang.getUserIdLogin(object)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Func1<JsonObject, Observable<UserInfo>>() {
+                    @Override
+                    public Observable<UserInfo> call(JsonObject jsonObject) {
+                        YangToken = jsonObject.get("id").getAsString();
+                        YangUserId = jsonObject.get("userId").getAsString();
+                        return mNtfinaceApi.getUserInfo(YangUserId, YangToken).subscribeOn(Schedulers.io());
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Func1<UserInfo, Observable<JsonObject>>() {
+                    @Override
+                    public Observable<JsonObject> call(UserInfo mUserInfo) {
+                        Toast.makeText(LoginActivity.this, mUserInfo.getUsername(), Toast.LENGTH_SHORT).show();
+                        return mNtfinaceApi.getMiInfo(YangUserId, YangToken).subscribeOn(Schedulers.io());
+                    }
+                }).observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        new Action1<JsonObject>() {
+                            @Override
+                            public void call(JsonObject mJsonObject) {
+                                JsonObject message = mJsonObject.get("message").getAsJsonObject();
+                                final String account = message.get("accid").getAsString();
+                                final String token = message.get("token").getAsString();
+                                MiLogin(account, token);
+                            }
+                        }, new Action1<Throwable>() {
+                            @Override
+                            public void call(Throwable throwable) {
+                                Toast.makeText(LoginActivity.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
 
-        final String account = "576a5f8ea957f19907c3b580";
-        final String token = "9b3576c6035bd0a51607c954c4ff5505";
 
+    }
+
+    private void MiLogin(final String account, final String token) {
         // 登录
         loginRequest = NIMClient.getService(AuthService.class).login(new LoginInfo(account, token));
         loginRequest.setCallback(new RequestCallback<LoginInfo>() {

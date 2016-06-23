@@ -479,6 +479,11 @@
     <eat-comment/>
     <string name="add">添加</string>
     <string name="advanced_team">高级群</string>
+    <!-- From: file:/E:/Android_yjm_black/Android_coding/NIM_Android_Demo_v2.4.0/Android_ntfinace/uikit/build/intermediates/exploded-aar/Android_ntfinace/httplib/unspecified/res/values/values.xml -->
+    <eat-comment/>
+    <string name="app_name">httplib</string>
+    <!-- From: file:/E:/Android_yjm_black/Android_coding/NIM_Android_Demo_v2.4.0/Android_ntfinace/uikit/build/intermediates/bundles/debug/res/values/values.xml -->
+    <eat-comment/>
     <string name="cancel">取消</string>
     <string name="cancel_team_admin">取消管理员</string>
     <string name="capture_video_size_in_kb">视频文件大小为: %1$dKB,</string>
