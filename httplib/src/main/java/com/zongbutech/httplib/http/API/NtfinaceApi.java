@@ -1,5 +1,6 @@
 package com.zongbutech.httplib.http.API;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.zongbutech.httplib.http.Bean.UserInfo;
 
@@ -19,8 +20,9 @@ public interface NtfinaceApi {
     public static String BaseApiYang = "http://112.124.0.91/Api/v1/";
     //获取配置信息
     public static String getConfigs = BaseApi + "ntfinance/Configs";
-
-
+    //获取配置信息
+    @GET("ntfinance/Configs")
+    Observable<JsonArray> getConfigs();
     //登陆
     @POST("users/login")
     Observable<JsonObject> getUserIdLogin(@Body JsonObject mJsonObject);
@@ -32,16 +34,9 @@ public interface NtfinaceApi {
     Observable<JsonObject> getMiInfo(@Path("userID") String userID, @Query("access_token") String Token);
 
 
+    //获取Chatrooms的房间数目
+    public static String getChatrooms = BaseApi + "ntfinance/Chatrooms?filter[order]=updatedAt DESC&filter[limit]=1000&filter[offset]=0";
 
 
-
-//   //  获取配置信息
-//    public static String getConfigs = BaseApi +"ntfinance/Configs";
-//    //登陆
-//    public static String Login = "http://112.124.0.91/Api/v1/users/login";
-//    //获取用户信息
-//    public static String getUserInfo =BaseApi+ "api/v1/ntfinance/users/findOne?filter[where][id]=UserId&access_token=Token";
-//    //获取Mi登陆信息
-//    public static String getMiInfo =BaseApi+ "api/v1/ntfinance/users/UserId/NIMToken?access_token=Token";
 
 }

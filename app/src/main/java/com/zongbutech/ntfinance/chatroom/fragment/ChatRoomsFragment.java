@@ -1,23 +1,26 @@
 package com.zongbutech.ntfinance.chatroom.fragment;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import com.google.gson.JsonArray;
 import com.netease.nim.uikit.common.adapter.TAdapterDelegate;
 import com.netease.nim.uikit.common.adapter.TViewHolder;
 import com.netease.nim.uikit.common.fragment.TFragment;
 import com.netease.nim.uikit.common.ui.ptr.PullToRefreshBase;
 import com.netease.nim.uikit.common.ui.ptr.PullToRefreshGridView;
-import com.netease.nim.uikit.common.util.log.LogUtil;
-import com.netease.nimlib.sdk.chatroom.model.ChatRoomInfo;
+import com.zongbutech.httplib.http.API.NtfinaceApi;
+import com.zongbutech.httplib.http.Utils.JsonUtils;
+import com.zongbutech.httplib.http.Utils.OkHttpUtils;
+import com.zongbutech.httplib.http.db.ChatRoomBean;
 import com.zongbutech.ntfinance.R;
 import com.zongbutech.ntfinance.chatroom.activity.ChatRoomActivity;
 import com.zongbutech.ntfinance.chatroom.adapter.ChatRoomAdapter;
-import com.zongbutech.ntfinance.chatroom.thridparty.ChatRoomHttpClient;
 import com.zongbutech.ntfinance.chatroom.viewholder.ChatRoomViewHolder;
 
 import java.util.ArrayList;
@@ -32,7 +35,7 @@ public class ChatRoomsFragment extends TFragment implements TAdapterDelegate, Ch
     private static final String TAG = ChatRoomsFragment.class.getSimpleName();
     private View loadingFrame;
     private PullToRefreshGridView gridView;
-    private List<ChatRoomInfo> items = new ArrayList<>();
+    private List<ChatRoomBean> items = new ArrayList<>();
     private ChatRoomAdapter adapter;
 
     @Override
@@ -93,8 +96,8 @@ public class ChatRoomsFragment extends TFragment implements TAdapterDelegate, Ch
     }
 
     @Override
-    public void onItemClick(String roomId) {
-        ChatRoomActivity.start(getActivity(), roomId);
+    public void onItemClick(ChatRoomBean bean) {
+        ChatRoomActivity.start(getActivity(), bean.getNimRoomId());
     }
 
     private void initAdapter() {
@@ -102,27 +105,54 @@ public class ChatRoomsFragment extends TFragment implements TAdapterDelegate, Ch
     }
 
     private void fetchData() {
-        ChatRoomHttpClient.getInstance().fetchChatRoomList(new ChatRoomHttpClient.ChatRoomHttpCallback<List<ChatRoomInfo>>() {
-            @Override
-            public void onSuccess(List<ChatRoomInfo> rooms) {
-                if (items.isEmpty()) {
-                    items.addAll(rooms);
-                }
 
+        OkHttpUtils.get(NtfinaceApi.getChatrooms, new OkHttpUtils.ResultCallback<JsonArray>() {
+            @Override
+            public void onSuccess(JsonArray mJsonArray) {
+
+                List<ChatRoomBean> mChatRoomBeans = new ArrayList<ChatRoomBean>();
+                for (int i = 0; i < mJsonArray.size(); i++) {
+                    ChatRoomBean mChatRoomBean = JsonUtils.deserialize(mJsonArray.get(i).toString(), ChatRoomBean.class);
+                    mChatRoomBeans.add(mChatRoomBean);
+                }
+                if (items.isEmpty()) {
+                    items.addAll(mChatRoomBeans);
+                }
                 onFetchDataDone(true);
             }
 
             @Override
-            public void onFailed(int code, String errorMsg) {
+            public void onFailure(Exception e) {
                 onFetchDataDone(false);
                 if (getActivity() != null) {
-                    Toast.makeText(getActivity(), "fetch chat room list failed, code=" + code, Toast.LENGTH_SHORT);
+                    Toast.makeText(getActivity(), "fetch chat room list failed," + e.getMessage(), Toast.LENGTH_SHORT);
                 }
-
-                LogUtil.d(TAG, "fetch chat room list failed, code:" + code
-                        + " errorMsg:" + errorMsg);
+                Log.e(ChatRoomsFragment.class.getSimpleName(), "fetch chat room list failed," + e.getMessage());
             }
         });
+
+
+//        ChatRoomHttpClient.getInstance().fetchChatRoomList(new ChatRoomHttpClient.ChatRoomHttpCallback<List<ChatRoomInfo>>() {
+//            @Override
+//            public void onSuccess(List<ChatRoomInfo> rooms) {
+//                if (items.isEmpty()) {
+//                    items.addAll(rooms);
+//                }
+//
+//                onFetchDataDone(true);
+//            }
+//
+//            @Override
+//            public void onFailed(int code, String errorMsg) {
+//                onFetchDataDone(false);
+//                if (getActivity() != null) {
+//                    Toast.makeText(getActivity(), "fetch chat room list failed, code=" + code, Toast.LENGTH_SHORT);
+//                }
+//
+//                LogUtil.d(TAG, "fetch chat room list failed, code:" + code
+//                        + " errorMsg:" + errorMsg);
+//            }
+//        });
     }
 
     private void onFetchDataDone(boolean success) {

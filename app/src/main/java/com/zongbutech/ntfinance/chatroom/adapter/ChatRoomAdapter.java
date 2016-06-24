@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.netease.nim.uikit.common.adapter.TAdapter;
 import com.netease.nim.uikit.common.adapter.TAdapterDelegate;
+import com.zongbutech.httplib.http.db.ChatRoomBean;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ public class ChatRoomAdapter extends TAdapter {
     }
 
     public interface ViewHolderEventListener {
-        void onItemClick(String roomId);
+        void onItemClick(ChatRoomBean bean);
     }
 
     private ViewHolderEventListener viewHolderEventListener;

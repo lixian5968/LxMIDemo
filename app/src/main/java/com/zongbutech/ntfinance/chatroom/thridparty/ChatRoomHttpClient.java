@@ -1,13 +1,11 @@
 package com.zongbutech.ntfinance.chatroom.thridparty;
 
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.netease.nim.uikit.common.util.log.LogUtil;
 import com.netease.nimlib.sdk.chatroom.model.ChatRoomInfo;
+import com.zongbutech.httplib.http.Utils.SharePrefUtil;
 import com.zongbutech.ntfinance.DemoCache;
 import com.zongbutech.ntfinance.chatroom.helper.ExtensionHelper;
 import com.zongbutech.ntfinance.common.http.NimHttpClient;
@@ -135,15 +133,25 @@ public class ChatRoomHttpClient {
     }
 
     private String readAppKey() {
-        try {
-            ApplicationInfo appInfo = DemoCache.getContext().getPackageManager()
-                    .getApplicationInfo(DemoCache.getContext().getPackageName(), PackageManager.GET_META_DATA);
-            if (appInfo != null) {
-                return appInfo.metaData.getString("com.netease.nim.appKey");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+
+        String appKey = SharePrefUtil.getString(DemoCache.getContext(), "appKey", "");
+        if(appKey!=null && appKey.length()>0){
+            return appKey;
+        }else{
+            return null;
         }
-        return null;
+
+
+//        try {
+//            ApplicationInfo appInfo = DemoCache.getContext().getPackageManager()
+//                    .getApplicationInfo(DemoCache.getContext().getPackageName(), PackageManager.GET_META_DATA);
+//            if (appInfo != null) {
+//                return appInfo.metaData.getString("com.netease.nim.appKey");
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return null;
     }
 }

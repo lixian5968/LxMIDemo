@@ -1,5 +1,6 @@
 package com.zongbutech.ntfinance.chatroom.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +9,8 @@ import android.widget.Toast;
 
 import com.netease.nim.uikit.common.fragment.TFragment;
 import com.netease.nim.uikit.session.actions.BaseAction;
+import com.netease.nim.uikit.session.actions.ImageAction;
+import com.netease.nim.uikit.session.actions.LocationAction;
 import com.netease.nim.uikit.session.module.Container;
 import com.netease.nim.uikit.session.module.ModuleProxy;
 import com.netease.nim.uikit.session.module.input.InputPanel;
@@ -27,7 +30,6 @@ import com.zongbutech.ntfinance.chatroom.helper.ChatRoomMemberCache;
 import com.zongbutech.ntfinance.chatroom.module.ChatRoomMsgListPanel;
 import com.zongbutech.ntfinance.session.action.GuessAction;
 import com.zongbutech.ntfinance.session.action.LxAction;
-import com.zongbutech.ntfinance.session.action.LxLocationAction;
 import com.zongbutech.ntfinance.session.action.TipAction;
 
 import java.util.ArrayList;
@@ -117,7 +119,7 @@ public class ChatRoomMessageFragment extends TFragment implements ModuleProxy {
         }
 
         if (inputPanel == null) {
-            inputPanel = new InputPanel(container, rootView, getActionList(), false);
+            inputPanel = new InputPanel(container, rootView, getActionList(), true);
         } else {
             inputPanel.reload(container, null);
         }
@@ -196,12 +198,21 @@ public class ChatRoomMessageFragment extends TFragment implements ModuleProxy {
 //        actions.add(new GuessAction());
 
 
-
-        actions.add(new TipAction());
-        actions.add(new LxAction());
+        actions.add(new ImageAction());
+        actions.add(new LocationAction());
         actions.add(new GuessAction());
-        actions.add(new LxLocationAction());
+        actions.add(new TipAction());
+
+        actions.add(new LxAction());
+//        actions.add(new LxLocationAction());
 
         return actions;
     }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        inputPanel.onActivityResult(requestCode, resultCode, data);
+    }
+
 }

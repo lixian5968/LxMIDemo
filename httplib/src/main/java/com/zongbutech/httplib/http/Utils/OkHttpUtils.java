@@ -189,19 +189,19 @@ public class OkHttpUtils {
      * @param url      请求url
      * @param callback 请求回调
      */
-    public static void get(Context ct, String url, ResultCallback callback) {
+    public static void get(String url, ResultCallback callback) {
         getmInstance(ct).getRequest(url, callback);
     }
 
-    public static String get(Context ct, String url) {
+    public static String get(String url) {
         return getmInstance(ct).getRequest(url);
     }
 
-    public static void Delete(Context ct, String url, ResultCallback callback) {
+    public static void Delete(String url, ResultCallback callback) {
         getmInstance(ct).DeleteRequest(url, callback);
     }
 
-    public static String Delete(Context ct, String url) {
+    public static String Delete(String url) {
         return getmInstance(ct).DeleteRequest(url);
     }
 
@@ -213,11 +213,11 @@ public class OkHttpUtils {
      * @param callback 请求回调
      * @param params   请求参数
      */
-    public static void post(Context ct, String url, final ResultCallback callback, List<Param> params) {
+    public static void post(String url, final ResultCallback callback, List<Param> params) {
         getmInstance(ct).postRequest(url, callback, params);
     }
 
-    public static String post(Context ct, String url, List<Param> params) {
+    public static String post(String url, List<Param> params) {
         return getmInstance(ct).postRequest(url, params);
     }
 
@@ -228,12 +228,18 @@ public class OkHttpUtils {
      * @param callback 请求回调
      * @param params   请求参数
      */
-    public static void put(Context ct, String url, final ResultCallback callback, List<Param> params) {
+    public static void put(String url, final ResultCallback callback, List<Param> params) {
         getmInstance(ct).putRequest(url, callback, params);
     }
 
-    public static String put(Context ct, String url, List<Param> params) {
+    public static String put(String url, List<Param> params) {
         return getmInstance(ct).putRequest(url, params);
+    }
+
+    public static Context ct;
+
+    public static void init(Context mContext) {
+        ct = mContext;
     }
 
     /**

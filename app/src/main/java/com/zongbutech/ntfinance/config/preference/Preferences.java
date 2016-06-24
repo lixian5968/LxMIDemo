@@ -12,6 +12,7 @@ import com.zongbutech.ntfinance.DemoCache;
 public class Preferences {
     private static final String KEY_USER_ACCOUNT = "account";
     private static final String KEY_USER_TOKEN = "token";
+    private static final String KEY_APPKEY = "appkey";
 
     public static void saveUserAccount(String account) {
         saveString(KEY_USER_ACCOUNT, account);
@@ -20,13 +21,18 @@ public class Preferences {
     public static String getUserAccount() {
         return getString(KEY_USER_ACCOUNT);
     }
-
     public static void saveUserToken(String token) {
         saveString(KEY_USER_TOKEN, token);
+    }
+    public static void saveAppKey(String appkey) {
+        saveString(KEY_APPKEY, appkey);
     }
 
     public static String getUserToken() {
         return getString(KEY_USER_TOKEN);
+    }
+    public static String getAppKey() {
+        return getString(KEY_APPKEY);
     }
 
     private static void saveString(String key, String value) {

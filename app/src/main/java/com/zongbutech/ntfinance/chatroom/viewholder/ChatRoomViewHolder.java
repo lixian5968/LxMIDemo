@@ -5,10 +5,10 @@ import android.widget.TextView;
 
 import com.netease.nim.uikit.common.adapter.TViewHolder;
 import com.netease.nim.uikit.common.ui.imageview.ImageViewEx;
-import com.netease.nimlib.sdk.chatroom.model.ChatRoomInfo;
+import com.zongbutech.httplib.http.Bean.HttpChatRoomBean;
+import com.zongbutech.httplib.http.db.ChatRoomBean;
 import com.zongbutech.ntfinance.R;
 import com.zongbutech.ntfinance.chatroom.adapter.ChatRoomAdapter;
-import com.zongbutech.ntfinance.chatroom.helper.ChatRoomHelper;
 
 public class ChatRoomViewHolder extends TViewHolder {
     private final static int COUNT_LIMIT = 10000;
@@ -16,12 +16,13 @@ public class ChatRoomViewHolder extends TViewHolder {
     private TextView nameText;
     private TextView onlineCountText;
 
-    private ChatRoomInfo room;
+    private ChatRoomBean room;
 
     public void refresh(Object item) {
-        room = (ChatRoomInfo) item;
+        room = (ChatRoomBean) item;
         updateBackground();
-        ChatRoomHelper.setCoverImage(room.getRoomId(), coverImage);
+//        ChatRoomHelper.setCoverImage(room.getNimRoomId(), coverImage);
+        coverImage.load(room.getIconURL());
         nameText.setText(room.getName());
         setOnlineCount();
     }
@@ -38,7 +39,7 @@ public class ChatRoomViewHolder extends TViewHolder {
         coverImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((ChatRoomAdapter)getAdapter()).getEventListener().onItemClick(room.getRoomId());
+                ((ChatRoomAdapter)getAdapter()).getEventListener().onItemClick(room);
             }
         });
     }
@@ -48,10 +49,12 @@ public class ChatRoomViewHolder extends TViewHolder {
     }
 
     private void setOnlineCount() {
-        if (room.getOnlineUserCount() < COUNT_LIMIT) {
-            onlineCountText.setText(String.valueOf(room.getOnlineUserCount()));
-        } else if (room.getOnlineUserCount() >= COUNT_LIMIT) {
-            onlineCountText.setText(String.format("%.1f", room.getOnlineUserCount() / (float) COUNT_LIMIT) + "万");
-        }
+//        if (room.getOnlineUserCount() < COUNT_LIMIT) {
+//            onlineCountText.setText(String.valueOf(room.getOnlineUserCount()));
+//        } else if (room.getOnlineUserCount() >= COUNT_LIMIT) {
+//            onlineCountText.setText(String.format("%.1f", room.getOnlineUserCount() / (float) COUNT_LIMIT) + "万");
+//        }
+
+        onlineCountText.setText("不知道人数");
     }
 }

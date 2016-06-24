@@ -19,27 +19,6 @@ public class LxAction extends BaseAction {
     @Override
     public void onClick() {
 
-//        try {
-//            Lx2CustomAttachment mLxCustomAttachment =   new Lx2CustomAttachment();
-//            JSONObject mobj = new JSONObject();
-//            mobj.put("lx","lx");
-//            mLxCustomAttachment.fromJson(mobj);
-//
-//            IMMessage message = MessageBuilder.createCustomMessage(getAccount(), getSessionType(), "lx",mLxCustomAttachment );
-//            sendMessage(message);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-
-//
-//        Lx2CustomAttachment attachment = new Lx2CustomAttachment();
-//        IMMessage message;
-//        if (getContainer() != null && getContainer().sessionType == SessionTypeEnum.ChatRoom) {
-//            message = ChatRoomMessageBuilder.createChatRoomCustomMessage(getAccount(), attachment);
-//        } else {
-//            message = MessageBuilder.createCustomMessage(getAccount(), getSessionType(), "lx1", attachment);
-//        }
-//        sendMessage(message);
 
         IMMessage message = MessageBuilder.createTextMessage(
                 getAccount(), // 聊天对象的 ID，如果是单聊，为用户帐号，如果是群聊，为群组 ID

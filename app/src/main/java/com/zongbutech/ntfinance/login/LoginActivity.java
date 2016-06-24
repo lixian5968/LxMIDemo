@@ -17,6 +17,7 @@ import android.view.View.OnKeyListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.netease.nim.uikit.cache.DataCacheManager;
 import com.netease.nim.uikit.common.activity.TActionBarActivity;
@@ -31,12 +32,13 @@ import com.netease.nim.uikit.common.util.sys.ScreenUtil;
 import com.netease.nimlib.sdk.AbortableFuture;
 import com.netease.nimlib.sdk.NIMClient;
 import com.netease.nimlib.sdk.RequestCallback;
-import com.netease.nimlib.sdk.RequestCallbackWrapper;
-import com.netease.nimlib.sdk.ResponseCode;
 import com.netease.nimlib.sdk.auth.AuthService;
 import com.netease.nimlib.sdk.auth.ClientType;
 import com.netease.nimlib.sdk.auth.LoginInfo;
+import com.zongbutech.httplib.http.Bean.ConfigsBean;
 import com.zongbutech.httplib.http.Bean.UserInfo;
+import com.zongbutech.httplib.http.Utils.JsonUtils;
+import com.zongbutech.httplib.http.Utils.SharePrefUtil;
 import com.zongbutech.ntfinance.DemoCache;
 import com.zongbutech.ntfinance.R;
 import com.zongbutech.ntfinance.config.preference.Preferences;
@@ -164,7 +166,7 @@ public class LoginActivity extends TActionBarActivity implements OnKeyListener {
         loginPasswordEdit.setOnKeyListener(this);
 
         String account = Preferences.getUserAccount();
-        loginAccountEdit.setText(account);
+//        loginAccountEdit.setText(account);
     }
 
     /**
@@ -220,6 +222,7 @@ public class LoginActivity extends TActionBarActivity implements OnKeyListener {
      */
     String YangToken = "";
     String YangUserId = "";
+    String appKey = "";
 
     private void login() {
         DialogMaker.showProgressDialog(this, null, getString(R.string.logining), true, new DialogInterface.OnCancelListener() {
@@ -239,6 +242,7 @@ public class LoginActivity extends TActionBarActivity implements OnKeyListener {
 //        final String account = loginAccountEdit.getEditableText().toString().toLowerCase();
 //        final String token = tokenFromPassword(loginPasswordEdit.getEditableText().toString());
 
+
         JsonObject object = new JsonObject();
         object.addProperty("mobilePhone", loginAccountEdit.getEditableText().toString());
         object.addProperty("password", loginPasswordEdit.getEditableText().toString());
@@ -254,13 +258,31 @@ public class LoginActivity extends TActionBarActivity implements OnKeyListener {
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread())
-                .flatMap(new Func1<UserInfo, Observable<JsonObject>>() {
+                .flatMap(new Func1<UserInfo, Observable<JsonArray>>() {
                     @Override
-                    public Observable<JsonObject> call(UserInfo mUserInfo) {
+                    public Observable<JsonArray> call(UserInfo mUserInfo) {
                         Toast.makeText(LoginActivity.this, mUserInfo.getUsername(), Toast.LENGTH_SHORT).show();
+                        return mNtfinaceApi.getConfigs().subscribeOn(Schedulers.io());
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Func1<JsonArray, Observable<JsonObject>>() {
+                    @Override
+                    public Observable<JsonObject> call(JsonArray mJsonArray) {
+                        for (int i = 0; i < mJsonArray.size(); i++) {
+                            ConfigsBean mConfigsBean = JsonUtils.deserialize(mJsonArray.get(i).toString(), ConfigsBean.class);
+                            if ("nim".equals(mConfigsBean.getCode())) {
+                                appKey = mConfigsBean.getValue().getAppKey();
+                                break;
+                            }
+                        }
+                        if(appKey.length()>0){
+                            SharePrefUtil.saveString(ct, "appKey", appKey);
+                        }
                         return mNtfinaceApi.getMiInfo(YangUserId, YangToken).subscribeOn(Schedulers.io());
                     }
-                }).observeOn(AndroidSchedulers.mainThread())
+                })
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         new Action1<JsonObject>() {
                             @Override
@@ -273,6 +295,7 @@ public class LoginActivity extends TActionBarActivity implements OnKeyListener {
                         }, new Action1<Throwable>() {
                             @Override
                             public void call(Throwable throwable) {
+                                onLoginDone();
                                 Toast.makeText(LoginActivity.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
                             }
                         });
@@ -282,15 +305,16 @@ public class LoginActivity extends TActionBarActivity implements OnKeyListener {
 
     private void MiLogin(final String account, final String token) {
         // 登录
-        loginRequest = NIMClient.getService(AuthService.class).login(new LoginInfo(account, token));
+        loginRequest = NIMClient.getService(AuthService.class).login(new LoginInfo(account, token,appKey));
         loginRequest.setCallback(new RequestCallback<LoginInfo>() {
             @Override
             public void onSuccess(LoginInfo param) {
                 LogUtil.i(TAG, "login success");
 
+
                 onLoginDone();
                 DemoCache.setAccount(account);
-                saveLoginInfo(account, token);
+                saveLoginInfo(account, token,appKey);
 
                 // 初始化消息提醒
                 NIMClient.toggleNotification(UserPreferences.getNotificationToggle());
@@ -333,9 +357,11 @@ public class LoginActivity extends TActionBarActivity implements OnKeyListener {
         DialogMaker.dismissProgressDialog();
     }
 
-    private void saveLoginInfo(final String account, final String token) {
+    private void saveLoginInfo(final String account, final String token,final String appKey) {
         Preferences.saveUserAccount(account);
         Preferences.saveUserToken(token);
+        Preferences.saveAppKey(appKey);
+
     }
 
     //DEMO中使用 username 作为 NIM 的account ，md5(password) 作为 token
@@ -526,21 +552,21 @@ public class LoginActivity extends TActionBarActivity implements OnKeyListener {
         MainActivity.start(LoginActivity.this, null);
 
         // 演示15s后手动登录，登录成功后，可以正常收发数据
-        getHandler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                loginRequest = NIMClient.getService(AuthService.class).login(new LoginInfo(account, token));
-                loginRequest.setCallback(new RequestCallbackWrapper() {
-                    @Override
-                    public void onResult(int code, Object result, Throwable exception) {
-                        Log.i("test", "real login, code=" + code);
-                        if (code == ResponseCode.RES_SUCCESS) {
-                            saveLoginInfo(account, token);
-                            finish();
-                        }
-                    }
-                });
-            }
-        }, 15 * 1000);
+//        getHandler().postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                loginRequest = NIMClient.getService(AuthService.class).login(new LoginInfo(account, token));
+//                loginRequest.setCallback(new RequestCallbackWrapper() {
+//                    @Override
+//                    public void onResult(int code, Object result, Throwable exception) {
+//                        Log.i("test", "real login, code=" + code);
+//                        if (code == ResponseCode.RES_SUCCESS) {
+//                            saveLoginInfo(account, token);
+//                            finish();
+//                        }
+//                    }
+//                });
+//            }
+//        }, 15 * 1000);
     }
 }

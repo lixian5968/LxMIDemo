@@ -1,5 +1,6 @@
 package com.zongbutech.ntfinance.chatroom.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import com.netease.nim.uikit.common.ui.imageview.ImageViewEx;
 import com.netease.nimlib.sdk.NIMClient;
 import com.netease.nimlib.sdk.chatroom.ChatRoomService;
+import com.netease.nimlib.sdk.chatroom.model.ChatRoomInfo;
 import com.zongbutech.ntfinance.R;
 import com.zongbutech.ntfinance.chatroom.activity.ChatRoomActivity;
 import com.zongbutech.ntfinance.chatroom.adapter.ChatRoomTabPagerAdapter;
@@ -30,6 +32,7 @@ public class ChatRoomFragment extends ChatRoomTabFragment implements ViewPager.O
     private ChatRoomTabPagerAdapter adapter;
     private int scrollState;
     private ImageViewEx imageView;
+    private TextView chatRoomName;
     private TextView statusText;
 
     @Override
@@ -46,6 +49,8 @@ public class ChatRoomFragment extends ChatRoomTabFragment implements ViewPager.O
         return inflater.inflate(R.layout.chat_room_fragment, container, false);
     }
 
+    ChatRoomInfo mChatRoomInfo;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -60,6 +65,8 @@ public class ChatRoomFragment extends ChatRoomTabFragment implements ViewPager.O
     }
 
     public void updateView() {
+        mChatRoomInfo = ((ChatRoomActivity) getActivity()).getRoomInfo();
+        chatRoomName.setText(mChatRoomInfo.getName());
         ChatRoomHelper.setCoverImage(((ChatRoomActivity) getActivity()).getRoomInfo().getRoomId(), imageView);
     }
 
@@ -71,6 +78,8 @@ public class ChatRoomFragment extends ChatRoomTabFragment implements ViewPager.O
     private void findViews() {
         imageView = findView(R.id.chat_room_view);
         statusText = findView(R.id.online_status);
+        chatRoomName = findView(R.id.chatRoomName);
+
         final ImageView backImage = findView(R.id.back_arrow);
         tabs = findView(R.id.chat_room_tabs);
         viewPager = findView(R.id.chat_room_viewpager);
@@ -113,7 +122,9 @@ public class ChatRoomFragment extends ChatRoomTabFragment implements ViewPager.O
         tabs.setOnTabDoubleTapListener(adapter);
     }
 
-    /******************** OnPageChangeListener **************************/
+    /********************
+     * OnPageChangeListener
+     **************************/
 
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -146,5 +157,12 @@ public class ChatRoomFragment extends ChatRoomTabFragment implements ViewPager.O
         if (scrollState == ViewPager.SCROLL_STATE_IDLE) {
             adapter.onPageSelected(viewPager.getCurrentItem());
         }
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        adapter.getItem(0).onActivityResult(requestCode, resultCode, data);
     }
 }

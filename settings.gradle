@@ -1,1 +1,1 @@
-include ':app', ':uikit', ':httplib'
+include ':app', ':uikit', ':httplib', ':greendao'

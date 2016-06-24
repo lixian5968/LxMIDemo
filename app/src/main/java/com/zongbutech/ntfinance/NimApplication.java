@@ -11,9 +11,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.google.gson.JsonArray;
 import com.netease.nim.uikit.BaseApplication;
 import com.netease.nim.uikit.ImageLoaderKit;
 import com.netease.nim.uikit.NimUIKit;
@@ -43,11 +41,6 @@ import com.netease.nimlib.sdk.team.model.TeamNotificationFilter;
 import com.netease.nimlib.sdk.team.model.UpdateTeamAttachment;
 import com.netease.nimlib.sdk.uinfo.UserInfoProvider;
 import com.netease.nimlib.sdk.uinfo.model.NimUserInfo;
-import com.zongbutech.httplib.http.API.NtfinaceApi;
-import com.zongbutech.httplib.http.Bean.ConfigsBean;
-import com.zongbutech.httplib.http.Utils.JsonUtils;
-import com.zongbutech.httplib.http.Utils.OkHttpClientServer;
-import com.zongbutech.httplib.http.Utils.OkHttpUtils;
 import com.zongbutech.ntfinance.avchat.AVChatProfile;
 import com.zongbutech.ntfinance.avchat.activity.AVChatActivity;
 import com.zongbutech.ntfinance.common.util.crash.AppCrashHandler;
@@ -70,75 +63,49 @@ public class NimApplication extends BaseApplication {
 
     public void onCreate() {
         super.onCreate();
-
-
-
-        if (OkHttpClientServer.isOpenNetwork(NimApplication.this)) {
-            String url = NtfinaceApi.getConfigs;
-            OkHttpUtils.get(NimApplication.this, url, new OkHttpUtils.ResultCallback<JsonArray>() {
-                @Override
-                public void onSuccess(JsonArray mJsonArray) {
-
-                    String appKey = "";
-                    for (int i = 0; i < mJsonArray.size(); i++) {
-                        ConfigsBean mConfigsBean = JsonUtils.deserialize(mJsonArray.get(i).toString(), ConfigsBean.class);
-                        if ("nim".equals(mConfigsBean.getCode())) {
-                            appKey = mConfigsBean.getValue().getAppKey();
-                            break;
-                        }
-                    }
-
-                    DemoCache.setContext(NimApplication.this);
-                    NIMClient.init(NimApplication.this, getLoginInfo(), getOptions(appKey));
-                    ExtraOptions.provide();
-                    // crash handler
-                    AppCrashHandler.getInstance(NimApplication.this);
-                    if (inMainProcess()) {
-                        // init pinyin
-                        PinYin.init(NimApplication.this);
-                        PinYin.validate();
-                        // 初始化UIKit模块
-                        initUIKit();
-                        // 注册群通知消息过滤器
-                        registerTeamNotificationFilter();
-                        // 初始化消息提醒
-                        NIMClient.toggleNotification(UserPreferences.getNotificationToggle());
-                        // 注册网络通话来电
-                        enableAVChat();
-                        // 注册白板会话
-                        enableRTS();
-                        // 注册语言变化监听
-                        registerLocaleReceiver(true);
-                    }
-
-
-                }
-
-                @Override
-                public void onFailure(Exception e) {
-                    Toast.makeText(NimApplication.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
-        } else {
-            Toast.makeText(NimApplication.this, "请打开网络", Toast.LENGTH_SHORT).show();
+        DemoCache.setContext(NimApplication.this);
+        NIMClient.init(NimApplication.this, getLoginInfo(), getOptions());
+        ExtraOptions.provide();
+        // crash handler
+        AppCrashHandler.getInstance(NimApplication.this);
+        if (inMainProcess()) {
+            // init pinyin
+            PinYin.init(NimApplication.this);
+            PinYin.validate();
+            // 初始化UIKit模块
+            initUIKit();
+            // 注册群通知消息过滤器
+            registerTeamNotificationFilter();
+            // 初始化消息提醒
+            NIMClient.toggleNotification(UserPreferences.getNotificationToggle());
+            // 注册网络通话来电
+            enableAVChat();
+            // 注册白板会话
+            enableRTS();
+            // 注册语言变化监听
+            registerLocaleReceiver(true);
         }
 
 
     }
 
+
     private LoginInfo getLoginInfo() {
         String account = Preferences.getUserAccount();
         String token = Preferences.getUserToken();
+        String appkey = Preferences.getAppKey();
+
+        Log.e("lxNimApplication","account:"+account+",token:"+token);
 
         if (!TextUtils.isEmpty(account) && !TextUtils.isEmpty(token)) {
             DemoCache.setAccount(account.toLowerCase());
-            return new LoginInfo(account, token);
+            return new LoginInfo(account, token,appkey);
         } else {
             return null;
         }
     }
 
-    private SDKOptions getOptions(String appKey) {
+    private SDKOptions getOptions() {
         SDKOptions options = new SDKOptions();
 
         // 如果将新消息通知提醒托管给SDK完成，需要添加以下配置。
@@ -182,7 +149,7 @@ public class NimApplication extends BaseApplication {
         options.messageNotifierCustomization = messageNotifierCustomization;
 
 
-        options.appKey = appKey;
+
 
         return options;
     }

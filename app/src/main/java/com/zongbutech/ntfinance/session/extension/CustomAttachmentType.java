@@ -9,6 +9,5 @@ public interface CustomAttachmentType {
     int SnapChat = 2;
     int Sticker = 3;
     int RTS = 4;
-
-    int Lx =5;
+    int type =5;
 }
