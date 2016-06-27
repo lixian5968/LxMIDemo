@@ -1,5 +1,7 @@
 package com.zongbutech.httplib.http.Bean;
 
+import java.util.Date;
+
 /**
  * Created by lixian on 2016/6/24.
  */
@@ -20,103 +22,19 @@ public class HttpChatRoomBean extends BaseBean {
      * updatedAt : 2016-06-19T11:43:07.919Z
      */
 
-    private String createdAt;
-    private String creatorId;
-    private String iconURL;
-    private String id;
-    private int maxUser;
-    private String name;
-    private String nimRoomId;
-    private String ownerId;
-    private int priority;
-    private int status;
-    private String updatedAt;
+    public Date createdAt;
+    public String creatorId;
+    public boolean hasPassword;
+    public String iconURL;
+    public String id;
+    public int maxUser;
+    public String name;
+    public String nimRoomId;
+    public String ownerId;
+    public int priority;
+    public int status;
+    public Date updatedAt;
 
-    public String getCreatedAt() {
-        return createdAt;
-    }
 
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
-    }
 
-    public String getCreatorId() {
-        return creatorId;
-    }
-
-    public void setCreatorId(String creatorId) {
-        this.creatorId = creatorId;
-    }
-
-    public String getIconURL() {
-        return iconURL;
-    }
-
-    public void setIconURL(String iconURL) {
-        this.iconURL = iconURL;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public int getMaxUser() {
-        return maxUser;
-    }
-
-    public void setMaxUser(int maxUser) {
-        this.maxUser = maxUser;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setNimRoomId(String nimRoomId) {
-        this.nimRoomId = nimRoomId;
-    }
-
-    public String getNimRoomId() {
-        return nimRoomId;
-    }
-
-    public String getOwnerId() {
-        return ownerId;
-    }
-
-    public void setOwnerId(String ownerId) {
-        this.ownerId = ownerId;
-    }
-
-    public int getPriority() {
-        return priority;
-    }
-
-    public void setPriority(int priority) {
-        this.priority = priority;
-    }
-
-    public int getStatus() {
-        return status;
-    }
-
-    public void setStatus(int status) {
-        this.status = status;
-    }
-
-    public String getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(String updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 }

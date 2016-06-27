@@ -3,6 +3,7 @@ package com.zongbutech.ntfinance.chatroom.module;
 import android.os.Build;
 import android.os.Handler;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 
 import com.netease.nim.uikit.UserPreferences;
@@ -26,6 +27,7 @@ import com.netease.nimlib.sdk.chatroom.ChatRoomMessageBuilder;
 import com.netease.nimlib.sdk.chatroom.ChatRoomService;
 import com.netease.nimlib.sdk.chatroom.ChatRoomServiceObserver;
 import com.netease.nimlib.sdk.chatroom.model.ChatRoomMessage;
+import com.netease.nimlib.sdk.chatroom.model.ChatRoomNotificationAttachment;
 import com.netease.nimlib.sdk.msg.attachment.AudioAttachment;
 import com.netease.nimlib.sdk.msg.attachment.FileAttachment;
 import com.netease.nimlib.sdk.msg.constant.MsgDirectionEnum;
@@ -88,6 +90,7 @@ public class ChatRoomMsgListPanel implements TAdapterDelegate {
 
     private void initListView() {
         items = new LinkedList<>();
+        MessageItems = new LinkedList<>();
         adapter = new MsgAdapter(container.activity, items, this);
         adapter.setEventListener(new MsgItemEventListener());
 
@@ -168,7 +171,6 @@ public class ChatRoomMsgListPanel implements TAdapterDelegate {
         if (messageList == null || messageList.isEmpty()) {
             return;
         }
-
         for (IMMessage msg : messageList) {
             saveMessage(msg, addFirst);
         }
@@ -178,11 +180,9 @@ public class ChatRoomMsgListPanel implements TAdapterDelegate {
         if (message == null) {
             return;
         }
-
         if (items.size() >= MESSAGE_CAPACITY) {
             items.poll();
         }
-
         if (addFirst) {
             items.add(0, message);
         } else {
@@ -212,6 +212,8 @@ public class ChatRoomMsgListPanel implements TAdapterDelegate {
     /**
      * *************** MessageLoader ***************
      */
+    LinkedList<IMMessage> MessageItems;
+
     private class MessageLoader implements AutoRefreshListView.OnRefreshListener {
 
         private static final int LOAD_MESSAGE_COUNT = 10;
@@ -229,7 +231,25 @@ public class ChatRoomMsgListPanel implements TAdapterDelegate {
             @Override
             public void onResult(int code, List<ChatRoomMessage> messages, Throwable exception) {
                 if (messages != null) {
-                    onMessageLoaded(messages);
+
+                    if(messages.size()>0){
+                        List<ChatRoomMessage> newMessages = new ArrayList<>();
+                        for (ChatRoomMessage message : messages) {
+                            if (!(message.getAttachment() instanceof ChatRoomNotificationAttachment)) {
+                                newMessages.add(message);
+                            } else {
+                                MessageItems.add(message);
+                            }
+                            Log.e("lx", message.getTime() + "");
+                        }
+                        if (newMessages.size() > 0) {
+                            onMessageLoaded(newMessages);
+                        } else {
+                            loadFromLocal();
+                        }
+                    }else{
+                        onMessageLoaded(messages);
+                    }
                 } else {
                     messageListView.onRefreshComplete(LOAD_MESSAGE_COUNT, LOAD_MESSAGE_COUNT, false);
                 }
@@ -246,7 +266,17 @@ public class ChatRoomMsgListPanel implements TAdapterDelegate {
             if (items.size() == 0) {
                 return (anchor == null ? ChatRoomMessageBuilder.createEmptyChatRoomMessage(container.account, 0) : anchor);
             } else {
-                return items.get(0);
+                if (MessageItems.size() == 0 && items.size() != 0) {
+                    return items.get(0);
+                }
+                if (MessageItems.size() != 0 && items.size() == 0) {
+                    return MessageItems.get(MessageItems.size() - 1);
+                }
+                if (MessageItems.get(MessageItems.size() - 1).getTime() <= items.get(0).getTime()) {
+                    return MessageItems.get(MessageItems.size() - 1);
+                } else {
+                    return items.get(0);
+                }
             }
         }
 
@@ -267,21 +297,17 @@ public class ChatRoomMsgListPanel implements TAdapterDelegate {
                     }
                 }
             }
-
             List<IMMessage> result = new ArrayList<>();
             for (IMMessage message : messages) {
                 result.add(message);
             }
             saveMessage(result, true);
-
             // 如果是第一次加载，updateShowTimeItem返回的就是lastShowTimeItem
             if (firstLoad) {
                 ListViewUtil.scrollToBottom(messageListView);
             }
-
             refreshMessageList();
             messageListView.onRefreshComplete(count, LOAD_MESSAGE_COUNT, true);
-
             firstLoad = false;
         }
 

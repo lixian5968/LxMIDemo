@@ -17,6 +17,7 @@ public class MyClass {
         ChatRoomBean.setSuperclass("com.zongbutech.httplib.http.Bean.BaseBean");
         ChatRoomBean.addIdProperty();
         ChatRoomBean.addDateProperty("createdAt");
+        ChatRoomBean.addStringProperty("objectId");
         ChatRoomBean.addStringProperty("creatorId");
         ChatRoomBean.addStringProperty("iconURL");
         ChatRoomBean.addIntProperty("maxUser");
@@ -25,6 +26,7 @@ public class MyClass {
         ChatRoomBean.addStringProperty("ownerId");
         ChatRoomBean.addIntProperty("priority");
         ChatRoomBean.addIntProperty("status");
+        ChatRoomBean.addBooleanProperty("hasPassword");
         ChatRoomBean.addDateProperty("updatedAt");
 
         File f = new File(GREEN_DAO_CODE_PATH);

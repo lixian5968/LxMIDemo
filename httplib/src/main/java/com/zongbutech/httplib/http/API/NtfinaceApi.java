@@ -23,6 +23,9 @@ public interface NtfinaceApi {
     //获取配置信息
     @GET("ntfinance/Configs")
     Observable<JsonArray> getConfigs();
+
+
+
     //登陆
     @POST("users/login")
     Observable<JsonObject> getUserIdLogin(@Body JsonObject mJsonObject);

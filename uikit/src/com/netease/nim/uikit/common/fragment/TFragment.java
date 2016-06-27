@@ -8,7 +8,9 @@ import android.support.v4.app.Fragment;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
+import com.netease.nim.uikit.BaseApplication;
 import com.netease.nim.uikit.common.util.log.LogUtil;
+import com.zongbutech.httplib.http.db.DaoSession;
 
 public abstract class TFragment extends Fragment {
     private static final Handler handler = new Handler();
@@ -29,8 +31,14 @@ public abstract class TFragment extends Fragment {
         this.containerId = containerId;
     }
 
+    public  Context ct;
+    public DaoSession mDaoSession;
+
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        ct = getActivity();
+        mDaoSession = ((BaseApplication) ct.getApplicationContext()).getDaoSession();
+
 
         LogUtil.ui("fragment: " + getClass().getSimpleName() + " onActivityCreated()");
 

@@ -193,4 +193,8 @@ public class MsgAdapter extends TAdapter<IMMessage> {
     public String getUuid() {
         return messageId;
     }
+
+
+
+
 }

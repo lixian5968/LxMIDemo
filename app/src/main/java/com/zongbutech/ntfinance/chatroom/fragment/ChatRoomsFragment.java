@@ -1,7 +1,6 @@
 package com.zongbutech.ntfinance.chatroom.fragment;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,9 +14,11 @@ import com.netease.nim.uikit.common.fragment.TFragment;
 import com.netease.nim.uikit.common.ui.ptr.PullToRefreshBase;
 import com.netease.nim.uikit.common.ui.ptr.PullToRefreshGridView;
 import com.zongbutech.httplib.http.API.NtfinaceApi;
+import com.zongbutech.httplib.http.Bean.HttpChatRoomBean;
 import com.zongbutech.httplib.http.Utils.JsonUtils;
 import com.zongbutech.httplib.http.Utils.OkHttpUtils;
 import com.zongbutech.httplib.http.db.ChatRoomBean;
+import com.zongbutech.httplib.http.db.ChatRoomBeanDao;
 import com.zongbutech.ntfinance.R;
 import com.zongbutech.ntfinance.chatroom.activity.ChatRoomActivity;
 import com.zongbutech.ntfinance.chatroom.adapter.ChatRoomAdapter;
@@ -112,48 +113,102 @@ public class ChatRoomsFragment extends TFragment implements TAdapterDelegate, Ch
 
                 List<ChatRoomBean> mChatRoomBeans = new ArrayList<ChatRoomBean>();
                 for (int i = 0; i < mJsonArray.size(); i++) {
-                    ChatRoomBean mChatRoomBean = JsonUtils.deserialize(mJsonArray.get(i).toString(), ChatRoomBean.class);
+                    HttpChatRoomBean mHttpChatRoomBean = JsonUtils.deserialize(mJsonArray.get(i).toString(), HttpChatRoomBean.class);
+                    ChatRoomBean mChatRoomBean = getChatRoomBean(mHttpChatRoomBean);
                     mChatRoomBeans.add(mChatRoomBean);
                 }
                 if (items.isEmpty()) {
                     items.addAll(mChatRoomBeans);
                 }
+                saveChatRoomBeans(items);
                 onFetchDataDone(true);
             }
 
             @Override
             public void onFailure(Exception e) {
-                onFetchDataDone(false);
                 if (getActivity() != null) {
                     Toast.makeText(getActivity(), "fetch chat room list failed," + e.getMessage(), Toast.LENGTH_SHORT);
                 }
-                Log.e(ChatRoomsFragment.class.getSimpleName(), "fetch chat room list failed," + e.getMessage());
+                List<ChatRoomBean> mChatRoomBeans = getChatRoomBeans();
+                if (mChatRoomBeans != null && mChatRoomBeans.size() > 0) {
+                    items.addAll(mChatRoomBeans);
+                    onFetchDataDone(true);
+                } else {
+                    if (getActivity() != null) {
+                        Toast.makeText(getActivity(), "本地数据为空", Toast.LENGTH_SHORT);
+                    }
+                }
+
+//                onFetchDataDone(false);
+//                if (getActivity() != null) {
+//                    Toast.makeText(getActivity(), "fetch chat room list failed," + e.getMessage(), Toast.LENGTH_SHORT);
+//                }
+//                Log.e(ChatRoomsFragment.class.getSimpleName(), "fetch chat room list failed," + e.getMessage());
             }
         });
 
-
-//        ChatRoomHttpClient.getInstance().fetchChatRoomList(new ChatRoomHttpClient.ChatRoomHttpCallback<List<ChatRoomInfo>>() {
-//            @Override
-//            public void onSuccess(List<ChatRoomInfo> rooms) {
-//                if (items.isEmpty()) {
-//                    items.addAll(rooms);
-//                }
-//
-//                onFetchDataDone(true);
-//            }
-//
-//            @Override
-//            public void onFailed(int code, String errorMsg) {
-//                onFetchDataDone(false);
-//                if (getActivity() != null) {
-//                    Toast.makeText(getActivity(), "fetch chat room list failed, code=" + code, Toast.LENGTH_SHORT);
-//                }
-//
-//                LogUtil.d(TAG, "fetch chat room list failed, code:" + code
-//                        + " errorMsg:" + errorMsg);
-//            }
-//        });
     }
+
+    private List<ChatRoomBean> getChatRoomBeans() {
+        try {
+            List<ChatRoomBean> mChatRoomBeans = mDaoSession.getChatRoomBeanDao().queryBuilder().list();
+            if (mChatRoomBeans != null && mChatRoomBeans.size() > 0) {
+                return mChatRoomBeans;
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private void saveChatRoomBeans(List<ChatRoomBean> items) {
+        try {
+            ChatRoomBeanDao chatRoomBeanDao = mDaoSession.getChatRoomBeanDao();
+            chatRoomBeanDao.deleteAll();
+            for (ChatRoomBean bean : items) {
+                chatRoomBeanDao.insert(bean);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT);
+        }
+    }
+
+    //得到id值
+    private ChatRoomBean getChatRoomBeanById(String id) {
+        try {
+            ChatRoomBeanDao chatRoomBeanDao = mDaoSession.getChatRoomBeanDao();
+            ChatRoomBean bean = chatRoomBeanDao.queryBuilder().where(ChatRoomBeanDao.Properties.ObjectId.eq(id)).list().get(0);
+            return bean;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    //网络转化为本地
+    private ChatRoomBean getChatRoomBean(HttpChatRoomBean mHttpChatRoomBean) {
+        ChatRoomBean mChatRoomBean =   getChatRoomBeanById(mHttpChatRoomBean.id);
+        if(mChatRoomBean ==null){
+             mChatRoomBean = new ChatRoomBean();
+        }
+        mChatRoomBean.setCreatedAt(mHttpChatRoomBean.createdAt);
+        mChatRoomBean.setCreatorId(mHttpChatRoomBean.creatorId);
+        mChatRoomBean.setObjectId(mHttpChatRoomBean.id);
+        mChatRoomBean.setHasPassword(mHttpChatRoomBean.hasPassword);
+        mChatRoomBean.setIconURL(mHttpChatRoomBean.iconURL);
+        mChatRoomBean.setMaxUser(mHttpChatRoomBean.maxUser);
+        mChatRoomBean.setName(mHttpChatRoomBean.name);
+        mChatRoomBean.setNimRoomId(mHttpChatRoomBean.nimRoomId);
+        mChatRoomBean.setOwnerId(mHttpChatRoomBean.ownerId);
+        mChatRoomBean.setPriority(mHttpChatRoomBean.priority);
+        mChatRoomBean.setStatus(mHttpChatRoomBean.status);
+        mChatRoomBean.setUpdatedAt(mHttpChatRoomBean.updatedAt);
+        return mChatRoomBean;
+    }
+
 
     private void onFetchDataDone(boolean success) {
         loadingFrame.setVisibility(View.GONE);

@@ -8,6 +8,7 @@ public class ChatRoomBean extends com.zongbutech.httplib.http.Bean.BaseBean  {
 
     private Long id;
     private java.util.Date createdAt;
+    private String objectId;
     private String creatorId;
     private String iconURL;
     private Integer maxUser;
@@ -16,6 +17,7 @@ public class ChatRoomBean extends com.zongbutech.httplib.http.Bean.BaseBean  {
     private String ownerId;
     private Integer priority;
     private Integer status;
+    private Boolean hasPassword;
     private java.util.Date updatedAt;
 
     public ChatRoomBean() {
@@ -25,9 +27,10 @@ public class ChatRoomBean extends com.zongbutech.httplib.http.Bean.BaseBean  {
         this.id = id;
     }
 
-    public ChatRoomBean(Long id, java.util.Date createdAt, String creatorId, String iconURL, Integer maxUser, String name, String nimRoomId, String ownerId, Integer priority, Integer status, java.util.Date updatedAt) {
+    public ChatRoomBean(Long id, java.util.Date createdAt, String objectId, String creatorId, String iconURL, Integer maxUser, String name, String nimRoomId, String ownerId, Integer priority, Integer status, Boolean hasPassword, java.util.Date updatedAt) {
         this.id = id;
         this.createdAt = createdAt;
+        this.objectId = objectId;
         this.creatorId = creatorId;
         this.iconURL = iconURL;
         this.maxUser = maxUser;
@@ -36,6 +39,7 @@ public class ChatRoomBean extends com.zongbutech.httplib.http.Bean.BaseBean  {
         this.ownerId = ownerId;
         this.priority = priority;
         this.status = status;
+        this.hasPassword = hasPassword;
         this.updatedAt = updatedAt;
     }
 
@@ -53,6 +57,14 @@ public class ChatRoomBean extends com.zongbutech.httplib.http.Bean.BaseBean  {
 
     public void setCreatedAt(java.util.Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getObjectId() {
+        return objectId;
+    }
+
+    public void setObjectId(String objectId) {
+        this.objectId = objectId;
     }
 
     public String getCreatorId() {
@@ -117,6 +129,14 @@ public class ChatRoomBean extends com.zongbutech.httplib.http.Bean.BaseBean  {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public Boolean getHasPassword() {
+        return hasPassword;
+    }
+
+    public void setHasPassword(Boolean hasPassword) {
+        this.hasPassword = hasPassword;
     }
 
     public java.util.Date getUpdatedAt() {
