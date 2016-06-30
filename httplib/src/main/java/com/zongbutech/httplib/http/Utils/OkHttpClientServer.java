@@ -7,6 +7,7 @@ import com.zongbutech.httplib.cookie.ClearableCookieJar;
 import com.zongbutech.httplib.cookie.PersistentCookieJar;
 import com.zongbutech.httplib.cookie.cache.SetCookieCache;
 import com.zongbutech.httplib.cookie.persistence.SharedPrefsCookiePersistor;
+import com.zongbutech.httplib.http.logging.HttpLoggingInterceptor;
 
 import java.util.concurrent.TimeUnit;
 
@@ -21,6 +22,9 @@ public class OkHttpClientServer {
         if (mOkHttpClient == null) {
             OkHttpClient.Builder builder = new OkHttpClient.Builder().connectTimeout(20 * 1000, TimeUnit.MILLISECONDS).readTimeout(20 * 1000, TimeUnit.MILLISECONDS);
             ClearableCookieJar cookieJar = new PersistentCookieJar(new SetCookieCache(), new SharedPrefsCookiePersistor(ct));
+            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+            builder.addInterceptor(logging);
             mOkHttpClient = builder.cookieJar(cookieJar).build();
         }
         return mOkHttpClient;

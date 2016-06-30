@@ -10,6 +10,7 @@ import android.view.inputmethod.InputMethodManager;
 
 import com.netease.nim.uikit.BaseApplication;
 import com.netease.nim.uikit.common.util.log.LogUtil;
+import com.zongbutech.httplib.http.API.NtfinaceApi;
 import com.zongbutech.httplib.http.db.DaoSession;
 
 public abstract class TFragment extends Fragment {
@@ -31,14 +32,15 @@ public abstract class TFragment extends Fragment {
         this.containerId = containerId;
     }
 
-    public  Context ct;
+    public Context ct;
     public DaoSession mDaoSession;
+    public NtfinaceApi mNtfinaceApi;
 
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         ct = getActivity();
         mDaoSession = ((BaseApplication) ct.getApplicationContext()).getDaoSession();
-
+        mNtfinaceApi = ((BaseApplication) ct.getApplicationContext()).mNtfinaceApi;
 
         LogUtil.ui("fragment: " + getClass().getSimpleName() + " onActivityCreated()");
 

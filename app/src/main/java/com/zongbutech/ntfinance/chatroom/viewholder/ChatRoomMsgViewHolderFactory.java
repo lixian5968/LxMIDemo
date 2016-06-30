@@ -57,6 +57,7 @@ public class ChatRoomMsgViewHolderFactory {
     public static Class<? extends MsgViewHolderBase> getViewHolderByType(IMMessage message) {
         if (message.getMsgType() == MsgTypeEnum.text) {
             return ChatRoomViewHolderText.class;
+//            return MsgViewHolderText.class;
         } else if (message.getMsgType() == MsgTypeEnum.tip) {
             return MsgViewHolderTip.class;
         } else {

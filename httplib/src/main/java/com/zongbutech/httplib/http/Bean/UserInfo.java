@@ -1,28 +1,15 @@
 package com.zongbutech.httplib.http.Bean;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * Created by lixian on 2016/6/23.
  */
-public class UserInfo extends  BaseBean {
+public class UserInfo extends  BaseBean  {
 
 
-    /**
-     * mobilePhone : 13282008515
-     * username : qwe123
-     * email : 576a5f8df2931@576a5f8df2937.com
-     * id : 576a5f8ea957f19907c3b580
-     * gold : 0
-     * diamond : 0
-     * nimToken : 9b3576c6035bd0a51607c954c4ff5505
-     * friendIds : []
-     * followingCount : 0
-     * fansCount : 0
-     * role : 0
-     * ntfinanceUserId : 590
-     * updatedAt : 2016-06-22T10:17:41.986Z
-     */
+
 
     private String mobilePhone;
     private String username;
@@ -37,6 +24,30 @@ public class UserInfo extends  BaseBean {
     private int ntfinanceUserId;
     private String updatedAt;
     private List<String> friendIds;
+    /**
+     * gender : 1
+     * icon : http://nim.nos.netease.com/MTAzOTkyNQ==/bmltYV80NTg1MTE5MF8xNDY2NDc2NDA2OTE5X2ZkNzcxYmQwLWVkNDctNGY0My05Y2I5LWRlMTVkZThmMzQ4NQ==
+     * brief : i am a man
+     * mingyan : 早上大跌要买，早上大涨要卖，下午大涨不追，下午大跌次日买，早上大跌不割。
+     * zhiwu : sffsfsf
+     * latestPredict : {"predict":1,"time":1467165239869}
+     * cityId : 110100
+     * provinceId : 120000
+     */
+
+    private int gender;
+    private String icon;
+    private String brief;
+    private String mingyan;
+    private String zhiwu;
+    /**
+     * predict : 1
+     * time : 1467165239869
+     */
+
+    private LatestPredictBean latestPredict;
+    private String cityId;
+    private String provinceId;
 
     public String getMobilePhone() {
         return mobilePhone;
@@ -141,5 +152,90 @@ public class UserInfo extends  BaseBean {
 
     public void setFriendIds(List<String> friendIds) {
         this.friendIds = friendIds;
+    }
+
+    public int getGender() {
+        return gender;
+    }
+
+    public void setGender(int gender) {
+        this.gender = gender;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
+    }
+
+    public String getBrief() {
+        return brief;
+    }
+
+    public void setBrief(String brief) {
+        this.brief = brief;
+    }
+
+    public String getMingyan() {
+        return mingyan;
+    }
+
+    public void setMingyan(String mingyan) {
+        this.mingyan = mingyan;
+    }
+
+    public String getZhiwu() {
+        return zhiwu;
+    }
+
+    public void setZhiwu(String zhiwu) {
+        this.zhiwu = zhiwu;
+    }
+
+    public LatestPredictBean getLatestPredict() {
+        return latestPredict;
+    }
+
+    public void setLatestPredict(LatestPredictBean latestPredict) {
+        this.latestPredict = latestPredict;
+    }
+
+    public String getCityId() {
+        return cityId;
+    }
+
+    public void setCityId(String cityId) {
+        this.cityId = cityId;
+    }
+
+    public String getProvinceId() {
+        return provinceId;
+    }
+
+    public void setProvinceId(String provinceId) {
+        this.provinceId = provinceId;
+    }
+
+    public static class LatestPredictBean  implements Serializable{
+        private int predict;
+        private long time;
+
+        public int getPredict() {
+            return predict;
+        }
+
+        public void setPredict(int predict) {
+            this.predict = predict;
+        }
+
+        public long getTime() {
+            return time;
+        }
+
+        public void setTime(long time) {
+            this.time = time;
+        }
     }
 }

@@ -65,6 +65,7 @@
 
 
         <TextView
+            android:id="@+id/message_black"
             android:layout_centerVertical="true"
             android:text="按钮"
             android:layout_alignParentRight="true"
@@ -72,6 +73,23 @@
             android:layout_height="wrap_content" />
 
     </RelativeLayout>
+    
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        
+        <LinearLayout
+            android:id="@+id/user_v"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="45dp">
+
+
+        </LinearLayout>
+        
+        
+    </HorizontalScrollView>
 
 
     <com.zongbutech.ntfinance.common.ui.viewpager.PagerSlidingTabStrip

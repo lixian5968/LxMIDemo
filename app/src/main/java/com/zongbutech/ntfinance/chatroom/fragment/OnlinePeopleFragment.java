@@ -10,6 +10,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.JsonObject;
 import com.netease.nim.uikit.cache.SimpleCallback;
 import com.netease.nim.uikit.common.adapter.TAdapter;
 import com.netease.nim.uikit.common.adapter.TAdapterDelegate;
@@ -25,6 +26,8 @@ import com.netease.nimlib.sdk.chatroom.constant.MemberQueryType;
 import com.netease.nimlib.sdk.chatroom.constant.MemberType;
 import com.netease.nimlib.sdk.chatroom.model.ChatRoomMember;
 import com.netease.nimlib.sdk.chatroom.model.MemberOption;
+import com.zongbutech.httplib.http.Bean.UserBlockBean;
+import com.zongbutech.httplib.http.Utils.SharePrefUtil;
 import com.zongbutech.ntfinance.DemoCache;
 import com.zongbutech.ntfinance.R;
 import com.zongbutech.ntfinance.chatroom.activity.ChatRoomActivity;
@@ -38,6 +41,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 /**
  * 聊天室在线人数fragment
@@ -112,7 +119,7 @@ public class OnlinePeopleFragment extends TFragment implements TAdapterDelegate 
             }
         });
 
-        //listView.setOnItemLongClickListener(longClickListener); // 线上入口屏蔽成员操作
+        listView.setOnItemLongClickListener(longClickListener); // 线上入口屏蔽成员操作
     }
 
     private void stopRefreshing() {
@@ -124,7 +131,9 @@ public class OnlinePeopleFragment extends TFragment implements TAdapterDelegate 
         }, 50);
     }
 
-    /*************************** TAdapterDelegate **************************/
+    /***************************
+     * TAdapterDelegate
+     **************************/
     @Override
     public int getViewTypeCount() {
         return 1;
@@ -148,6 +157,9 @@ public class OnlinePeopleFragment extends TFragment implements TAdapterDelegate 
             // 拉取非固定成员
             getMembers(MemberQueryType.GUEST, enterTime, 0);
         }
+
+        getLimitMembers(MemberQueryType.NORMAL, updateTime, 0);
+
     }
 
     /**
@@ -161,19 +173,38 @@ public class OnlinePeopleFragment extends TFragment implements TAdapterDelegate 
                     if (onlineText.getVisibility() == View.VISIBLE || result == null || result.isEmpty()) {
                         onlineText.setVisibility(View.GONE);
                     }
-
                     addMembers(result);
-
                     if (memberQueryType == MemberQueryType.ONLINE_NORMAL && result.size() < LIMIT) {
                         isNormalEmpty = true; // 固定成员已经拉完
                         getMembers(MemberQueryType.GUEST, enterTime, result.size());
                     }
                 }
-
                 stopRefreshing();
             }
         });
     }
+
+    private void getLimitMembers(final MemberQueryType memberQueryType, final long time, int limit) {
+        ChatRoomMemberCache.getInstance().fetchRoomMembers(roomId, memberQueryType, time, (LIMIT - limit), new SimpleCallback<List<ChatRoomMember>>() {
+            @Override
+            public void onResult(boolean success, List<ChatRoomMember> result) {
+                if (success) {
+                    if (onlineText.getVisibility() == View.VISIBLE || result == null || result.isEmpty()) {
+                        onlineText.setVisibility(View.GONE);
+                    }
+                    List<ChatRoomMember> newResult = new ArrayList<ChatRoomMember>();
+                    for (ChatRoomMember mChatRoomMember : result) {
+                        if (mChatRoomMember.getMemberType() == MemberType.LIMITED) {
+                            newResult.add(mChatRoomMember);
+                        }
+                    }
+                    addMembers(newResult);
+                }
+                stopRefreshing();
+            }
+        });
+    }
+
 
     private void addMembers(List<ChatRoomMember> members) {
         for (ChatRoomMember member : members) {
@@ -212,7 +243,9 @@ public class OnlinePeopleFragment extends TFragment implements TAdapterDelegate 
     };
 
 
-    /**************************** 长按菜单 *********************************/
+    /****************************
+     * 长按菜单
+     *********************************/
     AdapterView.OnItemLongClickListener longClickListener = new AdapterView.OnItemLongClickListener() {
         @Override
         public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
@@ -243,35 +276,84 @@ public class OnlinePeopleFragment extends TFragment implements TAdapterDelegate 
         // 3、用户自己是普通成员
         // 4、用户自己是受限用户
         // 5、用户自己是游客
+
+        CustomAlertDialog alertDialog = new CustomAlertDialog(getActivity());
+
+        // 不能操作的条件
+        // 1、被操作用户是主播
+        // 2、被操作者是自己
+        if (currentMember.getMemberType() == MemberType.CREATOR
+                || currentMember.getAccount().equals(DemoCache.getAccount())) {
+            return;
+        }
+
         if (currentMember.getMemberType() == MemberType.CREATOR
                 || currentMember.getAccount().equals(DemoCache.getAccount())
                 || ChatRoomMemberCache.getInstance().getChatRoomMember(roomId, DemoCache.getAccount()).getMemberType() == MemberType.NORMAL
                 || ChatRoomMemberCache.getInstance().getChatRoomMember(roomId, DemoCache.getAccount()).getMemberType() == MemberType.LIMITED
                 || ChatRoomMemberCache.getInstance().getChatRoomMember(roomId, DemoCache.getAccount()).getMemberType() == MemberType.GUEST) {
-            return;
+
+            if (getActivity() instanceof ChatRoomActivity) {
+                //设置/取消屏蔽
+                addBlockItem(currentMember, alertDialog);
+                alertDialog.show();
+            }
+
+        } else {
+            //踢出
+            alertDialog.addItem(R.string.chatroom_kick_member, new CustomAlertDialog.onSeparateItemClickListener() {
+                @Override
+                public void onClick() {
+                    kickMember(currentMember);
+                }
+            });
+            // 设置/取消禁言
+            addMutedItem(currentMember, alertDialog);
+            // 设置/移出黑名单
+            addBlackListItem(currentMember, alertDialog);
+            // 设置/取消管理员
+            addAdminItem(currentMember, alertDialog);
+            // 设为/取消普通成员
+            addNormalItem(currentMember, alertDialog);
+            if (getActivity() instanceof ChatRoomActivity) {
+                //设置/取消屏蔽
+                addBlockItem(currentMember, alertDialog);
+            }
+            alertDialog.show();
         }
-        CustomAlertDialog alertDialog = new CustomAlertDialog(getActivity());
-        alertDialog.addItem(R.string.chatroom_kick_member, new CustomAlertDialog.onSeparateItemClickListener() {
+
+    }
+
+    //检查是否在禁言名单里面
+    private String CheckHave(List<UserBlockBean> mUserBlockBeans, String account) {
+        for (UserBlockBean bean : mUserBlockBeans) {
+            if (bean.getBlockUserId().equals(account)) {
+                return bean.getId();
+            }
+        }
+        return "";
+    }
+
+    // 添加屏蔽菜单
+    boolean result = false;
+    String blackID = "";
+
+    private void addBlockItem(final ChatRoomMember chatRoomMember, CustomAlertDialog alertDialog) {
+        List<UserBlockBean> mUserBlockBeans = ((ChatRoomActivity) getActivity()).mUserBlockBeans;
+        if (mUserBlockBeans != null && mUserBlockBeans.size() > 0) {
+            blackID = CheckHave(mUserBlockBeans, chatRoomMember.getAccount());
+            result = blackID.length() > 0;
+        }
+        int titleId = result ? R.string.move_out_messageblack : R.string.chatroom_messageblack;
+        alertDialog.addItem(titleId, new CustomAlertDialog.onSeparateItemClickListener() {
             @Override
             public void onClick() {
-                kickMember(currentMember);
+                setBlock(result, chatRoomMember);
             }
         });
 
-        // 设置/取消禁言
-        addMutedItem(currentMember, alertDialog);
-
-        // 设置/移出黑名单
-        addBlackListItem(currentMember, alertDialog);
-
-        // 设置/取消管理员
-        addAdminItem(currentMember, alertDialog);
-
-        // 设为/取消普通成员
-        addNormalItem(currentMember, alertDialog);
-
-        alertDialog.show();
     }
+
 
     // 添加禁言菜单
     private void addMutedItem(final ChatRoomMember chatRoomMember, CustomAlertDialog alertDialog) {
@@ -356,6 +438,54 @@ public class OnlinePeopleFragment extends TFragment implements TAdapterDelegate 
                 Log.d(TAG, "kick member exception:" + exception);
             }
         });
+    }
+
+    //添加屏蔽菜单
+    private void setBlock(boolean result, final ChatRoomMember chatRoomMember) {
+        String token = SharePrefUtil.getString(ct, "YangToken", "");
+        if (result) {
+            mNtfinaceApi.DeleteBlockID(blackID,token)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            new Action1<JsonObject>() {
+                                @Override
+                                public void call(JsonObject mJsonObject) {
+                                    if (mJsonObject.get("count").getAsInt() == 1) {
+                                        ((ChatRoomActivity) getActivity()).getUserBlocklists();
+                                    }
+                                }
+                            }, new Action1<Throwable>() {
+                                @Override
+                                public void call(Throwable throwable) {
+                                    Toast.makeText(ct, throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+        } else {
+            String userId = SharePrefUtil.getString(ct, "userId", "");
+            String blackID = chatRoomMember.getAccount();
+            JsonObject mJsonObject = new JsonObject();
+            mJsonObject.addProperty("avatar", chatRoomMember.getAvatar());
+            mJsonObject.addProperty("name", chatRoomMember.getNick());
+            mJsonObject.addProperty("roomId", chatRoomMember.getRoomId());
+
+
+            mNtfinaceApi.putBlock(userId, blackID, mJsonObject,token)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            new Action1<UserBlockBean>() {
+                                @Override
+                                public void call(UserBlockBean mJsonObject) {
+                                    ((ChatRoomActivity) getActivity()).getUserBlocklists();
+                                }
+                            }, new Action1<Throwable>() {
+                                @Override
+                                public void call(Throwable throwable) {
+                                    Toast.makeText(ct, throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+        }
     }
 
     // 设置/取消禁言
@@ -462,7 +592,7 @@ public class OnlinePeopleFragment extends TFragment implements TAdapterDelegate 
         adapter.notifyDataSetChanged();
     }
 
-    private  static Map<MemberType, Integer> compMap = new HashMap<>();
+    private static Map<MemberType, Integer> compMap = new HashMap<>();
 
     static {
         compMap.put(MemberType.CREATOR, 0);

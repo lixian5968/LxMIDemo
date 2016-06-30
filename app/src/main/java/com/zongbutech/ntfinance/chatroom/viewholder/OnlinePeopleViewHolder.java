@@ -45,8 +45,13 @@ public class OnlinePeopleViewHolder extends TViewHolder {
         } else {
             identityImage.setVisibility(View.GONE);
         }
+
+        String level ="0";
+        if (chatRoomMember.getExtension() != null && chatRoomMember.getExtension().get("role") != null) {
+            level = chatRoomMember.getExtension().get("role")+"";
+        }
         userHeadImage.loadAvatarByUrl(chatRoomMember.getAvatar());
-        nameText.setText(TextUtils.isEmpty(chatRoomMember.getNick()) ? "" : chatRoomMember.getNick());
+        nameText.setText(TextUtils.isEmpty(chatRoomMember.getNick()) ? "" : chatRoomMember.getNick() + ",等级：" + chatRoomMember.getMemberType() + ",role:" +level);
     }
 
 }

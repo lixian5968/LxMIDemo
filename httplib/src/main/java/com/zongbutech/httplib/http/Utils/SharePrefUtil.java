@@ -5,7 +5,15 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.text.TextUtils;
 
+import org.apache.commons.codec.binary.Base64;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.text.DecimalFormat;
 
 /**
@@ -184,6 +192,64 @@ public class SharePrefUtil {
         return sp.getBoolean(key, defValue);
     }
 
+
+    /**
+     * 将SharePref中经过base64编码的对象读取出来
+     *
+     * @param context
+     * @param key
+     * @return
+     */
+
+    public static Object getObj(Context context, String key) {
+        if (sp == null)
+            sp = context.getSharedPreferences(SP_NAME, 0);
+        String objBase64 = sp.getString(key, null);
+        if (TextUtils.isEmpty(objBase64))
+            return null;
+
+// 对Base64格式的字符串进行解码
+        byte[] base64Bytes = Base64.decodeBase64(objBase64.getBytes());
+        ByteArrayInputStream bais = new ByteArrayInputStream(base64Bytes);
+
+        ObjectInputStream ois;
+        Object obj = null;
+        try {
+            ois = new ObjectInputStream(bais);
+            obj = (Object) ois.readObject();
+            ois.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return obj;
+    }
+
+    /**
+     * 将对象进行base64编码后保存到SharePref中
+     *
+     * @param context
+     * @param key
+     * @param object
+     */
+    public static void saveObj(Context context, String key, Object object) {
+        if (sp == null)
+            sp = context.getSharedPreferences(SP_NAME, 0);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = null;
+        try {
+            oos = new ObjectOutputStream(baos);
+            oos.writeObject(object);
+
+            String objBase64 = new String(Base64.encodeBase64(baos
+                    .toByteArray()));
+
+            sp.edit().putString(key, objBase64).commit();
+            oos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
 

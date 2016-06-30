@@ -11,9 +11,12 @@ import android.support.v4.app.FragmentTransaction;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
+import com.netease.nim.uikit.BaseApplication;
 import com.netease.nim.uikit.common.fragment.TFragment;
 import com.netease.nim.uikit.common.util.sys.ReflectionUtil;
 import com.netease.nim.uikit.common.util.log.LogUtil;
+import com.zongbutech.httplib.http.API.NtfinaceApi;
+import com.zongbutech.httplib.http.db.DaoSession;
 
 public abstract class TActivity extends FragmentActivity {
 
@@ -21,9 +24,17 @@ public abstract class TActivity extends FragmentActivity {
 
     private static Handler handler;
 
+    public Context ct;
+    public NtfinaceApi mNtfinaceApi;
+    public DaoSession daoSession;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ct = this;
+        mNtfinaceApi = ((BaseApplication) ct.getApplicationContext()).mNtfinaceApi;
+        daoSession = ((BaseApplication) ct.getApplicationContext()).daoSession;
+
 
         LogUtil.ui("activity: " + getClass().getSimpleName() + " onCreate()");
     }

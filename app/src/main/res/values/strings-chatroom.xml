@@ -24,4 +24,8 @@
     <string name="cancel_level">取消等级</string>
     <string name="no_data">暂无数据</string>
     <string name="internet_broken">网络断开</string>
+
+
+    <string name="move_out_messageblack">不屏蔽信息</string>
+    <string name="chatroom_messageblack">屏蔽信息</string>
 </resources>

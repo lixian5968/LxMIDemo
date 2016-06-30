@@ -253,7 +253,13 @@ public class LoginActivity extends TActionBarActivity implements OnKeyListener {
                     @Override
                     public Observable<UserInfo> call(JsonObject jsonObject) {
                         YangToken = jsonObject.get("id").getAsString();
+                        if(YangToken.length()>0){
+                            SharePrefUtil.saveString(ct, "YangToken", YangToken);
+                        }
                         YangUserId = jsonObject.get("userId").getAsString();
+                        if(YangUserId.length()>0){
+                            SharePrefUtil.saveString(ct, "userId", YangUserId);
+                        }
                         return mNtfinaceApi.getUserInfo(YangUserId, YangToken).subscribeOn(Schedulers.io());
                     }
                 })
@@ -261,6 +267,7 @@ public class LoginActivity extends TActionBarActivity implements OnKeyListener {
                 .flatMap(new Func1<UserInfo, Observable<JsonArray>>() {
                     @Override
                     public Observable<JsonArray> call(UserInfo mUserInfo) {
+                        SharePrefUtil.saveObj(ct,"UserInfo",mUserInfo);
                         Toast.makeText(LoginActivity.this, mUserInfo.getUsername(), Toast.LENGTH_SHORT).show();
                         return mNtfinaceApi.getConfigs().subscribeOn(Schedulers.io());
                     }
@@ -271,7 +278,7 @@ public class LoginActivity extends TActionBarActivity implements OnKeyListener {
                     public Observable<JsonObject> call(JsonArray mJsonArray) {
                         for (int i = 0; i < mJsonArray.size(); i++) {
                             ConfigsBean mConfigsBean = JsonUtils.deserialize(mJsonArray.get(i).toString(), ConfigsBean.class);
-                            if ("nim".equals(mConfigsBean.getCode())) {
+                            if ("nim-config".equals(mConfigsBean.getCode())) {
                                 appKey = mConfigsBean.getValue().getAppKey();
                                 break;
                             }

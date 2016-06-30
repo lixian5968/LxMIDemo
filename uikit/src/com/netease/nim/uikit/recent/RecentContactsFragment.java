@@ -32,16 +32,22 @@ import com.netease.nimlib.sdk.RequestCallbackWrapper;
 import com.netease.nimlib.sdk.ResponseCode;
 import com.netease.nimlib.sdk.msg.MsgService;
 import com.netease.nimlib.sdk.msg.MsgServiceObserve;
+import com.netease.nimlib.sdk.msg.attachment.MsgAttachment;
+import com.netease.nimlib.sdk.msg.constant.MsgStatusEnum;
+import com.netease.nimlib.sdk.msg.constant.MsgTypeEnum;
 import com.netease.nimlib.sdk.msg.constant.SessionTypeEnum;
 import com.netease.nimlib.sdk.msg.model.IMMessage;
 import com.netease.nimlib.sdk.msg.model.RecentContact;
 import com.netease.nimlib.sdk.team.model.Team;
 import com.netease.nimlib.sdk.team.model.TeamMember;
+import com.zongbutech.httplib.http.Utils.Constants;
+import com.zongbutech.httplib.http.Utils.SharePrefUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import static com.netease.nim.uikit.common.ui.dialog.CustomAlertDialog.onSeparateItemClickListener;
 
@@ -85,6 +91,16 @@ public class RecentContactsFragment extends TFragment implements TAdapterDelegat
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+//        // 创建文本消息
+//        IMMessage message = MessageBuilder.createTextMessage(
+//                "576b4ac2a957f19907c3b587", // 聊天对象的 ID，如果是单聊，为用户帐号，如果是群聊，为群组 ID
+//                SessionTypeEnum.P2P, // 聊天类型，单聊或群组
+//                "" // 文本内容
+//        );
+//// 发送消息。如果需要关心发送结果，可设置回调函数。发送完成时，会收到回调。如果失败，会有具体的错误码。
+//        NIMClient.getService(MsgService.class).sendMessage(message,false);
+
         return inflater.inflate(R.layout.nim_recent_contacts, container, false);
     }
 
@@ -180,22 +196,23 @@ public class RecentContactsFragment extends TFragment implements TAdapterDelegat
         CustomAlertDialog alertDialog = new CustomAlertDialog(getActivity());
         alertDialog.setTitle(UserInfoHelper.getUserTitleName(recent.getContactId(), recent.getSessionType()));
         String title = getString(R.string.main_msg_list_delete_chatting);
-        alertDialog.addItem(title, new onSeparateItemClickListener() {
-            @Override
-            public void onClick() {
-                // 删除会话，删除后，消息历史被一起删除
-                NIMClient.getService(MsgService.class).deleteRecentContact(recent);
-                NIMClient.getService(MsgService.class).clearChattingHistory(recent.getContactId(), recent.getSessionType());
-                items.remove(recent);
+        if (!Constants.OfficialID.equals(recent.getContactId())) {
+            alertDialog.addItem(title, new onSeparateItemClickListener() {
+                @Override
+                public void onClick() {
+                    // 删除会话，删除后，消息历史被一起删除
+                    NIMClient.getService(MsgService.class).deleteRecentContact(recent);
+                    NIMClient.getService(MsgService.class).clearChattingHistory(recent.getContactId(), recent.getSessionType());
+                    items.remove(recent);
 
-                if (recent.getUnreadCount() > 0) {
-                    refreshMessages(true);
-                } else {
-                    notifyDataSetChanged();
+                    if (recent.getUnreadCount() > 0) {
+                        refreshMessages(true);
+                    } else {
+                        notifyDataSetChanged();
+                    }
                 }
-            }
-        });
-
+            });
+        }
         title = (isTagSet(recent, RECENT_TAG_STICKY) ? getString(R.string.main_msg_list_clear_sticky_on_top) : getString(R.string.main_msg_list_sticky_on_top));
         alertDialog.addItem(title, new onSeparateItemClickListener() {
             @Override
@@ -249,7 +266,9 @@ public class RecentContactsFragment extends TFragment implements TAdapterDelegat
                             return;
                         }
                         loadedRecents = recents;
-
+                        if (CheckNoHaveOfficial(recents)) {
+                            loadedRecents.add(0, getRecentContact());
+                        }
                         // 此处如果是界面刚初始化，为了防止界面卡顿，可先在后台把需要显示的用户资料和群组资料在后台加载好，然后再刷新界面
                         //
                         msgLoaded = true;
@@ -262,8 +281,114 @@ public class RecentContactsFragment extends TFragment implements TAdapterDelegat
         }, delay ? 250 : 0);
     }
 
+    //返回数据
+    private RecentContact getRecentContact() {
+
+//        RecentContact mRecentContact = recents.get(0);
+//        mRecentContact.getFromAccount();
+//        mRecentContact.getFromNick();
+//        mRecentContact.getSessionType();
+//        mRecentContact.getContactId();//576b4ac2a957f19907c3b587
+
+        RecentContact mRecentContact = new RecentContact() {
+            @Override
+            public String getContactId() {
+                return Constants.OfficialID;
+            }
+
+            @Override
+            public String getFromAccount() {
+                String userId = SharePrefUtil.getString(ct, "userId", "");
+                return userId;
+            }
+
+            @Override
+            public String getFromNick() {
+                return null;
+            }
+
+            @Override
+            public SessionTypeEnum getSessionType() {
+                return SessionTypeEnum.P2P;
+            }
+
+            @Override
+            public String getRecentMessageId() {
+                return null;
+            }
+
+            @Override
+            public MsgTypeEnum getMsgType() {
+                return null;
+            }
+
+            @Override
+            public MsgStatusEnum getMsgStatus() {
+                return null;
+            }
+
+            @Override
+            public void setMsgStatus(MsgStatusEnum msgStatusEnum) {
+
+            }
+
+            @Override
+            public int getUnreadCount() {
+                return 0;
+            }
+
+            @Override
+            public String getContent() {
+                return null;
+            }
+
+            @Override
+            public long getTime() {
+                return 0;
+            }
+
+            @Override
+            public MsgAttachment getAttachment() {
+                return null;
+            }
+
+            @Override
+            public void setTag(long l) {
+
+            }
+
+            @Override
+            public long getTag() {
+                return 0;
+            }
+
+            @Override
+            public Map<String, Object> getExtension() {
+                return null;
+            }
+
+            @Override
+            public void setExtension(Map<String, Object> map) {
+
+            }
+        };
+        return mRecentContact;
+    }
+
+    //没有等于这个Id的数据 返回true
+    private boolean CheckNoHaveOfficial(List<RecentContact> recents) {
+        for (RecentContact bean : recents) {
+            if (bean.getContactId().equals(Constants.OfficialID)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void onRecentContactsLoaded() {
         items.clear();
+
+
         if (loadedRecents != null) {
             items.addAll(loadedRecents);
             loadedRecents = null;

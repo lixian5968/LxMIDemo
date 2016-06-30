@@ -3,7 +3,6 @@ package com.zongbutech.ntfinance.chatroom.module;
 import android.os.Build;
 import android.os.Handler;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 
 import com.netease.nim.uikit.UserPreferences;
@@ -34,6 +33,8 @@ import com.netease.nimlib.sdk.msg.constant.MsgDirectionEnum;
 import com.netease.nimlib.sdk.msg.constant.MsgStatusEnum;
 import com.netease.nimlib.sdk.msg.model.AttachmentProgress;
 import com.netease.nimlib.sdk.msg.model.IMMessage;
+import com.zongbutech.httplib.http.Bean.UserBlockBean;
+import com.zongbutech.ntfinance.chatroom.activity.ChatRoomActivity;
 import com.zongbutech.ntfinance.chatroom.viewholder.ChatRoomMsgViewHolderFactory;
 
 import java.util.ArrayList;
@@ -88,6 +89,8 @@ public class ChatRoomMsgListPanel implements TAdapterDelegate {
         registerObservers(true);
     }
 
+    List<UserBlockBean> mUserBlockBeans;
+
     private void initListView() {
         items = new LinkedList<>();
         MessageItems = new LinkedList<>();
@@ -112,6 +115,10 @@ public class ChatRoomMsgListPanel implements TAdapterDelegate {
             }
         });
         messageListView.setOnRefreshListener(new MessageLoader());
+
+
+
+
     }
 
     // 刷新消息列表
@@ -180,6 +187,22 @@ public class ChatRoomMsgListPanel implements TAdapterDelegate {
         if (message == null) {
             return;
         }
+
+        if (container.activity instanceof ChatRoomActivity) {
+            mUserBlockBeans = ((ChatRoomActivity) container.activity).mUserBlockBeans;
+            if(mUserBlockBeans!=null){
+                for(UserBlockBean bean : mUserBlockBeans){
+                   if(bean.getBlockUserId().equals(message.getFromAccount())){
+                       return;
+                   }
+                }
+            }
+        }
+
+//        if (message.getAttachment() instanceof ChatRoomNotificationAttachment) {
+//            return;
+//        }
+
         if (items.size() >= MESSAGE_CAPACITY) {
             items.poll();
         }
@@ -232,7 +255,7 @@ public class ChatRoomMsgListPanel implements TAdapterDelegate {
             public void onResult(int code, List<ChatRoomMessage> messages, Throwable exception) {
                 if (messages != null) {
 
-                    if(messages.size()>0){
+                    if (messages.size() > 0) {
                         List<ChatRoomMessage> newMessages = new ArrayList<>();
                         for (ChatRoomMessage message : messages) {
                             if (!(message.getAttachment() instanceof ChatRoomNotificationAttachment)) {
@@ -240,14 +263,15 @@ public class ChatRoomMsgListPanel implements TAdapterDelegate {
                             } else {
                                 MessageItems.add(message);
                             }
-                            Log.e("lx", message.getTime() + "");
+
+//                            newMessages.add(message);
                         }
                         if (newMessages.size() > 0) {
                             onMessageLoaded(newMessages);
                         } else {
                             loadFromLocal();
                         }
-                    }else{
+                    } else {
                         onMessageLoaded(messages);
                     }
                 } else {
@@ -263,7 +287,7 @@ public class ChatRoomMsgListPanel implements TAdapterDelegate {
         }
 
         private IMMessage anchor() {
-            if (items.size() == 0) {
+            if (items.size() == 0 && MessageItems.size() == 0) {
                 return (anchor == null ? ChatRoomMessageBuilder.createEmptyChatRoomMessage(container.account, 0) : anchor);
             } else {
                 if (MessageItems.size() == 0 && items.size() != 0) {
@@ -307,7 +331,8 @@ public class ChatRoomMsgListPanel implements TAdapterDelegate {
                 ListViewUtil.scrollToBottom(messageListView);
             }
             refreshMessageList();
-            messageListView.onRefreshComplete(count, LOAD_MESSAGE_COUNT, true);
+//            messageListView.onRefreshComplete(count, LOAD_MESSAGE_COUNT, true);
+            messageListView.onRefreshComplete(count, count, true);
             firstLoad = false;
         }
 

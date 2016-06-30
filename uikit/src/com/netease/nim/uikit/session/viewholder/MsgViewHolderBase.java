@@ -41,8 +41,8 @@ public abstract class MsgViewHolderBase extends TViewHolder {
     protected LinearLayout nameContainer;
     protected TextView readReceiptTextView;
 
-    private HeadImageView avatarLeft;
-    private HeadImageView avatarRight;
+    protected HeadImageView avatarLeft;
+    protected HeadImageView avatarRight;
 
     public ImageView nameIconView;
 

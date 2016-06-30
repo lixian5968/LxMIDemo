@@ -17,12 +17,12 @@ import com.netease.nimlib.sdk.chatroom.model.ChatRoomMessage;
 public class ChatRoomViewHolderText extends MsgViewHolderText {
     @Override
     protected boolean isShowBubble() {
-        return false;
+        return true;
     }
 
     @Override
     protected boolean isShowHeadImage() {
-        return false;
+        return true;
     }
 
     @Override

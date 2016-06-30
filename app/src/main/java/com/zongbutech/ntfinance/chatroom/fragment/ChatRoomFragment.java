@@ -7,19 +7,28 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.netease.nim.uikit.cache.SimpleCallback;
+import com.netease.nim.uikit.common.ui.imageview.HeadImageView;
 import com.netease.nim.uikit.common.ui.imageview.ImageViewEx;
 import com.netease.nimlib.sdk.NIMClient;
 import com.netease.nimlib.sdk.chatroom.ChatRoomService;
+import com.netease.nimlib.sdk.chatroom.constant.MemberQueryType;
 import com.netease.nimlib.sdk.chatroom.model.ChatRoomInfo;
+import com.netease.nimlib.sdk.chatroom.model.ChatRoomMember;
+import com.zongbutech.httplib.http.Utils.ImageLoaderUtils;
 import com.zongbutech.ntfinance.R;
 import com.zongbutech.ntfinance.chatroom.activity.ChatRoomActivity;
 import com.zongbutech.ntfinance.chatroom.adapter.ChatRoomTabPagerAdapter;
 import com.zongbutech.ntfinance.chatroom.fragment.tab.ChatRoomTabFragment;
 import com.zongbutech.ntfinance.chatroom.helper.ChatRoomHelper;
+import com.zongbutech.ntfinance.chatroom.helper.ChatRoomMemberCache;
 import com.zongbutech.ntfinance.common.ui.viewpager.FadeInOutPageTransformer;
 import com.zongbutech.ntfinance.common.ui.viewpager.PagerSlidingTabStrip;
+
+import java.util.List;
 
 /**
  * 聊天室顶层fragment
@@ -67,6 +76,9 @@ public class ChatRoomFragment extends ChatRoomTabFragment implements ViewPager.O
     public void updateView() {
         mChatRoomInfo = ((ChatRoomActivity) getActivity()).getRoomInfo();
         chatRoomName.setText(mChatRoomInfo.getName());
+        getUsers();
+
+
         ChatRoomHelper.setCoverImage(((ChatRoomActivity) getActivity()).getRoomInfo().getRoomId(), imageView);
     }
 
@@ -75,10 +87,16 @@ public class ChatRoomFragment extends ChatRoomTabFragment implements ViewPager.O
         super.onDestroy();
     }
 
+    TextView message_black;
+    LinearLayout user_v;
+
     private void findViews() {
         imageView = findView(R.id.chat_room_view);
         statusText = findView(R.id.online_status);
         chatRoomName = findView(R.id.chatRoomName);
+        message_black = findView(R.id.message_black);
+        user_v = findView(R.id.user_v);
+
 
         final ImageView backImage = findView(R.id.back_arrow);
         tabs = findView(R.id.chat_room_tabs);
@@ -89,6 +107,57 @@ public class ChatRoomFragment extends ChatRoomTabFragment implements ViewPager.O
             public void onClick(View v) {
                 NIMClient.getService(ChatRoomService.class).exitChatRoom(((ChatRoomActivity) getActivity()).getRoomInfo().getRoomId());
                 ((ChatRoomActivity) getActivity()).clearChatRoom();
+            }
+        });
+
+        message_black.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getUsers();
+            }
+        });
+    }
+
+    public void getUsers() {
+        user_v.removeAllViews();
+        ChatRoomMemberCache.getInstance().fetchRoomMembers(mChatRoomInfo.getRoomId(), MemberQueryType.NORMAL, 0, 100, new SimpleCallback<List<ChatRoomMember>>() {
+            @Override
+            public void onResult(boolean success, List<ChatRoomMember> result) {
+                if (success) {
+                    for (ChatRoomMember bean : result) {
+                        if (bean.getExtension() != null && bean.getExtension().get("role") != null) {
+                            int role = Integer.parseInt(bean.getExtension().get("role") + "");
+                            if (role > 0 && bean.getAvatar()!=null && bean.getAvatar().length()>0) {
+                                HeadImageView headImageView = new HeadImageView(getActivity());
+                                headImageView.loadBuddyAvatar(bean.getAvatar());
+                                user_v.addView(headImageView);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        ChatRoomMemberCache.getInstance().fetchRoomMembers(mChatRoomInfo.getRoomId(), MemberQueryType.GUEST, 0, 100, new SimpleCallback<List<ChatRoomMember>>() {
+            @Override
+            public void onResult(boolean success, List<ChatRoomMember> result) {
+                if (success) {
+                    for (ChatRoomMember bean : result) {
+                        if (bean.getExtension() != null && bean.getExtension().get("role") != null) {
+                            int role = Integer.parseInt(bean.getExtension().get("role") + "");
+                            if(role>0){
+
+                                HeadImageView imageView = new HeadImageView(getActivity());
+                                ImageLoaderUtils.display(getActivity(),imageView,bean.getAvatar());
+                                user_v.addView(imageView);
+
+
+//                                HeadImageView headImageView = new HeadImageView(getActivity());
+//                                headImageView.loadBuddyAvatar(bean.getAvatar());
+//                                user_v.addView(headImageView);
+                            }
+                        }
+                    }
+                }
             }
         });
     }

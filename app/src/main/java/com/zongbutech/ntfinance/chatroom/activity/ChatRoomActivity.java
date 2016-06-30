@@ -4,8 +4,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
+import com.google.gson.JsonArray;
 import com.netease.nim.uikit.common.activity.TActivity;
 import com.netease.nim.uikit.common.ui.dialog.DialogMaker;
 import com.netease.nim.uikit.common.util.log.LogUtil;
@@ -23,10 +25,25 @@ import com.netease.nimlib.sdk.chatroom.model.ChatRoomMember;
 import com.netease.nimlib.sdk.chatroom.model.ChatRoomStatusChangeData;
 import com.netease.nimlib.sdk.chatroom.model.EnterChatRoomData;
 import com.netease.nimlib.sdk.chatroom.model.EnterChatRoomResultData;
+import com.zongbutech.httplib.http.Bean.UserBlockBean;
+import com.zongbutech.httplib.http.Bean.UserInfo;
+import com.zongbutech.httplib.http.Utils.JsonUtils;
+import com.zongbutech.httplib.http.Utils.SharePrefUtil;
+import com.zongbutech.httplib.http.db.ChatRoomBean;
 import com.zongbutech.ntfinance.R;
 import com.zongbutech.ntfinance.chatroom.fragment.ChatRoomFragment;
 import com.zongbutech.ntfinance.chatroom.fragment.ChatRoomMessageFragment;
 import com.zongbutech.ntfinance.chatroom.helper.ChatRoomMemberCache;
+
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 /**
  * 聊天室
@@ -34,6 +51,7 @@ import com.zongbutech.ntfinance.chatroom.helper.ChatRoomMemberCache;
  */
 public class ChatRoomActivity extends TActivity {
     private final static String EXTRA_ROOM_ID = "ROOM_ID";
+    private final static String ChatRoomBeanString = "ChatRoomBean";
     private static final String TAG = ChatRoomActivity.class.getSimpleName();
 
     /**
@@ -50,25 +68,67 @@ public class ChatRoomActivity extends TActivity {
     private ChatRoomMessageFragment messageFragment;
     private AbortableFuture<EnterChatRoomResultData> enterRequest;
 
-    public static void start(Context context, String roomId) {
+    public static void start(Context context, String roomId, ChatRoomBean bean) {
         Intent intent = new Intent();
         intent.setClass(context, ChatRoomActivity.class);
         intent.putExtra(EXTRA_ROOM_ID, roomId);
+        intent.putExtra(ChatRoomBeanString, bean);
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         context.startActivity(intent);
     }
-
+    ChatRoomBean mChatRoomBean;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.chat_room_activity);
         roomId = getIntent().getStringExtra(EXTRA_ROOM_ID);
+        mChatRoomBean = (ChatRoomBean) getIntent().getSerializableExtra(ChatRoomBeanString);
 
         // 注册监听
         registerObservers(true);
 
         // 登录聊天室
         enterRoom();
+
+
+    }
+
+    public List<UserBlockBean> mUserBlockBeans;
+
+    public void getUserBlocklists() {
+        String userId = SharePrefUtil.getString(ct, "userId", "");
+        JSONObject mJsonObject = new JSONObject();
+        try {
+            mJsonObject.put("order", "updatedAt DESC");
+            mJsonObject.put("limit", "100");
+            mJsonObject.put("offset", "0");
+            JSONObject where = new JSONObject();
+            where.put("userId", userId);
+            where.put("roomId", roomInfo.getRoomId());
+            mJsonObject.put("where", where);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        mNtfinaceApi.getUserBlocklists(mJsonObject.toString())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        new Action1<JsonArray>() {
+                            @Override
+                            public void call(JsonArray mJsonArray) {
+                                mUserBlockBeans = new ArrayList<UserBlockBean>();
+                                for (int i = 0; i < mJsonArray.size(); i++) {
+                                    UserBlockBean bean = JsonUtils.deserialize(mJsonArray.get(i).toString(), UserBlockBean.class);
+                                    mUserBlockBeans.add(bean);
+                                }
+                                Log.e("", "");
+                            }
+                        }, new Action1<Throwable>() {
+                            @Override
+                            public void call(Throwable throwable) {
+                                Toast.makeText(ct, throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
     }
 
     @Override
@@ -108,6 +168,19 @@ public class ChatRoomActivity extends TActivity {
             }
         }).setCanceledOnTouchOutside(false);
         EnterChatRoomData data = new EnterChatRoomData(roomId);
+
+        UserInfo mUserInfo = (UserInfo) SharePrefUtil.getObj(ct, "UserInfo");
+        if (mUserInfo != null) {
+            HashMap<String, Object> maps = new HashMap<>();
+            maps.put("gender", mUserInfo.getGender());
+            maps.put("role", mUserInfo.getRole());
+            boolean isChatroomOwner  =false;
+            if(mChatRoomBean.getCreatorId().equals(mUserInfo.getId())){
+                isChatroomOwner =true;
+            }
+            maps.put("isChatroomOwner", isChatroomOwner);
+            data.setExtension(maps);
+        }
         enterRequest = NIMClient.getService(ChatRoomService.class).enterChatRoom(data);
         enterRequest.setCallback(new RequestCallback<EnterChatRoomResultData>() {
             @Override
@@ -119,6 +192,9 @@ public class ChatRoomActivity extends TActivity {
                 ChatRoomMemberCache.getInstance().saveMyMember(member);
                 initChatRoomFragment();
                 initMessageFragment();
+
+                //获取用户的拉黑列表
+                getUserBlocklists();
             }
 
             @Override

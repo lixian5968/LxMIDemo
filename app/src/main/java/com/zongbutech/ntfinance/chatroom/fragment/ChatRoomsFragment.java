@@ -98,7 +98,7 @@ public class ChatRoomsFragment extends TFragment implements TAdapterDelegate, Ch
 
     @Override
     public void onItemClick(ChatRoomBean bean) {
-        ChatRoomActivity.start(getActivity(), bean.getNimRoomId());
+        ChatRoomActivity.start(getActivity(), bean.getNimRoomId(),bean);
     }
 
     private void initAdapter() {

@@ -33,7 +33,7 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 
 
-public class RetrofitService {
+public class   RetrofitService {
 
 
 
