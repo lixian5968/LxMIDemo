@@ -235,10 +235,12 @@ public class OnlinePeopleFragment extends TFragment implements TAdapterDelegate 
     ChatRoomMemberCache.RoomMemberChangedObserver roomMemberChangedObserver = new ChatRoomMemberCache.RoomMemberChangedObserver() {
         @Override
         public void onRoomMemberIn(ChatRoomMember member) {
+            Log.e("","");
         }
 
         @Override
         public void onRoomMemberExit(ChatRoomMember member) {
+            Log.e("","");
         }
     };
 

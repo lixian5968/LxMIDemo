@@ -440,6 +440,12 @@ public class InputPanel implements IEmoticonSelectedListener, IAudioRecordCallba
         container.proxy.onInputPanelExpand();
     }
 
+
+    public void sendText(String s){
+        if(s!=null && s.length()>0)
+        messageEditText.setText(s);
+    }
+
     // 显示更多布局
     private void showActionPanelLayout() {
         addActionPanelLayout();

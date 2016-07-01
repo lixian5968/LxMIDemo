@@ -76,7 +76,9 @@ public class ChatRoomActivity extends TActivity {
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         context.startActivity(intent);
     }
+
     ChatRoomBean mChatRoomBean;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -174,9 +176,9 @@ public class ChatRoomActivity extends TActivity {
             HashMap<String, Object> maps = new HashMap<>();
             maps.put("gender", mUserInfo.getGender());
             maps.put("role", mUserInfo.getRole());
-            boolean isChatroomOwner  =false;
-            if(mChatRoomBean.getCreatorId().equals(mUserInfo.getId())){
-                isChatroomOwner =true;
+            boolean isChatroomOwner = false;
+            if (mChatRoomBean.getCreatorId().equals(mUserInfo.getId())) {
+                isChatroomOwner = true;
             }
             maps.put("isChatroomOwner", isChatroomOwner);
             data.setExtension(maps);
@@ -226,6 +228,45 @@ public class ChatRoomActivity extends TActivity {
     private void registerObservers(boolean register) {
         NIMClient.getService(ChatRoomServiceObserver.class).observeOnlineStatus(onlineStatus, register);
         NIMClient.getService(ChatRoomServiceObserver.class).observeKickOutEvent(kickOutObserver, register);
+        ChatRoomMemberCache.getInstance().registerRoomMemberChangedObserver(roomMemberChangedObserver, register);
+    }
+
+    ChatRoomMemberCache.RoomMemberChangedObserver roomMemberChangedObserver = new ChatRoomMemberCache.RoomMemberChangedObserver() {
+        @Override
+        public void onRoomMemberIn(ChatRoomMember member) {
+            boolean result = CheckIsUser(member);
+            if (!result
+                    && member.getExtension() != null
+                    && member.getExtension().get("role") != null
+                    && Integer.parseInt(member.getExtension().get("role") + "") > 0
+                    &&fragment!=null
+                    ) {
+
+                fragment.AddOrRemoveUsers(true,member);
+            }
+        }
+
+        @Override
+        public void onRoomMemberExit(ChatRoomMember member) {
+            boolean result = CheckIsUser(member);
+            if (!result
+                    && member.getExtension() != null
+                    && member.getExtension().get("role") != null
+                    && Integer.parseInt(member.getExtension().get("role") + "") > 0
+                    &&fragment!=null
+                    ) {
+
+                fragment.AddOrRemoveUsers(false,member);
+            }
+        }
+    };
+
+    private boolean CheckIsUser(ChatRoomMember member) {
+        String userId = SharePrefUtil.getString(ct, "userId", "");
+        if (userId.equals(member.getAccount())) {
+            return true;
+        }
+        return false;
     }
 
     private void logoutChatRoom() {

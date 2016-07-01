@@ -216,4 +216,11 @@
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
     </style>
+
+
+    <style name="sendv" parent="android:Animation">
+        <item name="android:windowEnterAnimation">@anim/sendv_in</item>
+        <item name="android:windowExitAnimation">@anim/sendv_out</item>
+    </style>
+
 </resources>

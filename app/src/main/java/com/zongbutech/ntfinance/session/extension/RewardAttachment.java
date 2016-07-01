@@ -7,9 +7,13 @@ import com.alibaba.fastjson.JSONObject;
  */
 public class RewardAttachment extends CustomAttachment {
 
-
-    RewardAttachment() {
+    public RewardAttachment() {
         super(CustomAttachmentType.type);
+    }
+
+    public RewardAttachment(String s) {
+        super(CustomAttachmentType.type);
+        value= s;
     }
 
 
@@ -26,7 +30,7 @@ public class RewardAttachment extends CustomAttachment {
     @Override
     protected JSONObject packData() {
         JSONObject data = new JSONObject();
-        data.put("value", "xx打赏xx XXX");
+        data.put("value", value);
         return data;
     }
 

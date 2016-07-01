@@ -2,7 +2,9 @@ package com.zongbutech.httplib.http.API;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.zongbutech.httplib.http.Bean.OrderBean;
 import com.zongbutech.httplib.http.Bean.UserBlockBean;
+import com.zongbutech.httplib.http.Bean.UserGlod;
 import com.zongbutech.httplib.http.Bean.UserInfo;
 
 import retrofit2.http.Body;
@@ -59,5 +61,13 @@ public interface NtfinaceApi {
     @PUT("ntfinance/users/{UserID}/blockList/rel/{BlockUserID}")
     Observable<UserBlockBean> putBlock(@Path("UserID") String UserID, @Path("BlockUserID") String BlockUserID, @Body JsonObject mJsonObject,@Query("access_token") String access_token);
 
+
+    //获取用户金币数目
+    @GET("ntfinance/users/{UserID}/ntfUserInfo")
+    Observable<UserGlod> getUserGlod(@Path("UserID") String UserID,@Query("filter[order]") String order,@Query("access_token") String access_token);
+
+    //发送gold
+    @POST("ntfinance/GamificationOrders")
+    Observable<OrderBean> sendUserGlod(@Query("access_token") String access_token,@Body JsonObject mJsonObject);
 
 }

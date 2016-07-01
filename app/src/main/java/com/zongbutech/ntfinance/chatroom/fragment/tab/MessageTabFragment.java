@@ -18,6 +18,10 @@ import com.zongbutech.ntfinance.chatroom.fragment.ChatRoomMessageFragment;
 public class MessageTabFragment extends ChatRoomTabFragment {
     private ChatRoomMessageFragment fragment;
 
+    public ChatRoomMessageFragment getFragment() {
+        return fragment;
+    }
+
     public MessageTabFragment() {
         this.setContainerId(ChatRoomTab.CHAT_ROOM_MESSAGE.fragmentId);
     }

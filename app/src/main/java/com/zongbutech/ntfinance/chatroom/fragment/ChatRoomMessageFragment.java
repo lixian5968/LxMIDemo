@@ -177,6 +177,11 @@ public class ChatRoomMessageFragment extends TFragment implements ModuleProxy {
         return true;
     }
 
+
+    public void addMessgae(IMMessage msg){
+        messageListPanel.onMsgSend(msg);
+    }
+
     @Override
     public void onInputPanelExpand() {
         messageListPanel.scrollToBottom();
@@ -215,4 +220,7 @@ public class ChatRoomMessageFragment extends TFragment implements ModuleProxy {
         inputPanel.onActivityResult(requestCode, resultCode, data);
     }
 
+    public void setText(String s) {
+        inputPanel.sendText(s);
+    }
 }

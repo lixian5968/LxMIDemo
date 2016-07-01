@@ -3,13 +3,16 @@ package com.zongbutech.ntfinance.chatroom.fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.gson.JsonObject;
 import com.netease.nim.uikit.cache.SimpleCallback;
 import com.netease.nim.uikit.common.ui.imageview.HeadImageView;
 import com.netease.nim.uikit.common.ui.imageview.ImageViewEx;
@@ -18,17 +21,33 @@ import com.netease.nimlib.sdk.chatroom.ChatRoomService;
 import com.netease.nimlib.sdk.chatroom.constant.MemberQueryType;
 import com.netease.nimlib.sdk.chatroom.model.ChatRoomInfo;
 import com.netease.nimlib.sdk.chatroom.model.ChatRoomMember;
-import com.zongbutech.httplib.http.Utils.ImageLoaderUtils;
+import com.netease.nimlib.sdk.chatroom.model.ChatRoomMessage;
+import com.netease.nimlib.sdk.msg.MessageBuilder;
+import com.netease.nimlib.sdk.msg.constant.SessionTypeEnum;
+import com.netease.nimlib.sdk.msg.model.IMMessage;
+import com.zongbutech.httplib.http.Bean.OrderBean;
+import com.zongbutech.httplib.http.Bean.UserGlod;
+import com.zongbutech.httplib.http.Bean.UserInfo;
+import com.zongbutech.httplib.http.Utils.SharePrefUtil;
+import com.zongbutech.ntfinance.LxAdd.GoldPopupWindow;
+import com.zongbutech.ntfinance.LxAdd.SendVPopupWindow;
 import com.zongbutech.ntfinance.R;
 import com.zongbutech.ntfinance.chatroom.activity.ChatRoomActivity;
 import com.zongbutech.ntfinance.chatroom.adapter.ChatRoomTabPagerAdapter;
 import com.zongbutech.ntfinance.chatroom.fragment.tab.ChatRoomTabFragment;
+import com.zongbutech.ntfinance.chatroom.fragment.tab.MessageTabFragment;
 import com.zongbutech.ntfinance.chatroom.helper.ChatRoomHelper;
 import com.zongbutech.ntfinance.chatroom.helper.ChatRoomMemberCache;
 import com.zongbutech.ntfinance.common.ui.viewpager.FadeInOutPageTransformer;
 import com.zongbutech.ntfinance.common.ui.viewpager.PagerSlidingTabStrip;
+import com.zongbutech.ntfinance.session.extension.RewardAttachment;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 /**
  * 聊天室顶层fragment
@@ -113,27 +132,33 @@ public class ChatRoomFragment extends ChatRoomTabFragment implements ViewPager.O
         message_black.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getUsers();
+//                getUsers();
             }
         });
     }
 
+    List<ChatRoomMember> UserIcons = new ArrayList<>();
+
+    public void AddOrRemoveUsers(boolean result, ChatRoomMember mChatRoomMember) {
+        if (result) {
+            AddUserIcon(mChatRoomMember);
+        } else {
+            int index = UserIcons.indexOf(mChatRoomMember);
+            if (index != -1) {
+                UserIcons.remove(index);
+                user_v.removeViewAt(index);
+            }
+        }
+    }
+
     public void getUsers() {
+        UserIcons.clear();
         user_v.removeAllViews();
         ChatRoomMemberCache.getInstance().fetchRoomMembers(mChatRoomInfo.getRoomId(), MemberQueryType.NORMAL, 0, 100, new SimpleCallback<List<ChatRoomMember>>() {
             @Override
             public void onResult(boolean success, List<ChatRoomMember> result) {
                 if (success) {
-                    for (ChatRoomMember bean : result) {
-                        if (bean.getExtension() != null && bean.getExtension().get("role") != null) {
-                            int role = Integer.parseInt(bean.getExtension().get("role") + "");
-                            if (role > 0 && bean.getAvatar()!=null && bean.getAvatar().length()>0) {
-                                HeadImageView headImageView = new HeadImageView(getActivity());
-                                headImageView.loadBuddyAvatar(bean.getAvatar());
-                                user_v.addView(headImageView);
-                            }
-                        }
-                    }
+                    AddUserIcons(result);
                 }
             }
         });
@@ -141,26 +166,167 @@ public class ChatRoomFragment extends ChatRoomTabFragment implements ViewPager.O
             @Override
             public void onResult(boolean success, List<ChatRoomMember> result) {
                 if (success) {
-                    for (ChatRoomMember bean : result) {
-                        if (bean.getExtension() != null && bean.getExtension().get("role") != null) {
-                            int role = Integer.parseInt(bean.getExtension().get("role") + "");
-                            if(role>0){
-
-                                HeadImageView imageView = new HeadImageView(getActivity());
-                                ImageLoaderUtils.display(getActivity(),imageView,bean.getAvatar());
-                                user_v.addView(imageView);
-
-
-//                                HeadImageView headImageView = new HeadImageView(getActivity());
-//                                headImageView.loadBuddyAvatar(bean.getAvatar());
-//                                user_v.addView(headImageView);
-                            }
-                        }
-                    }
+                    AddUserIcons(result);
                 }
             }
         });
     }
+
+    private void AddUserIcons(List<ChatRoomMember> result) {
+        for (ChatRoomMember bean : result) {
+            if (bean.getExtension() != null && bean.getExtension().get("role") != null) {
+                int role = Integer.parseInt(bean.getExtension().get("role") + "");
+                if (role > 0 && bean.getAvatar() != null && bean.getAvatar().length() > 0) {
+                    AddUserIcon(bean);
+                }
+            }
+        }
+    }
+
+    SendVPopupWindow mSendVPopupWindow;
+    ChatRoomMember mChatRoomMember;
+
+    private void AddUserIcon(ChatRoomMember bean) {
+        UserIcons.add(bean);
+        HeadImageView imageView = new HeadImageView(getActivity());
+        int w = (int) getActivity().getResources().getDimension(R.dimen.text_size_40);
+        int h = (int) getActivity().getResources().getDimension(R.dimen.text_size_40);
+        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(w, h);
+        imageView.setLayoutParams(params);
+        imageView.loadBuddyAvatar(bean.getAccount());
+        imageView.setTag(bean.getAccount());
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mChatRoomMember = getChatRoomMemberById(v.getTag() + "");
+                if (mChatRoomMember != null) {
+                    mSendVPopupWindow = new SendVPopupWindow(getActivity(), onClickListener);
+                    mSendVPopupWindow.setNameAndIcon(mChatRoomMember.getNick(), mChatRoomMember.getAccount());
+                    mSendVPopupWindow.showAtLocation(viewPager, Gravity.CENTER, 0, 0);
+                }
+            }
+        });
+        user_v.addView(imageView);
+    }
+
+    GoldPopupWindow mGoldPopupWindow;
+    private View.OnClickListener onClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            switch (v.getId()) {
+                case R.id.send_it:
+                    if (mSendVPopupWindow != null) {
+                        mSendVPopupWindow.dismiss();
+                        getMoney();
+                    }
+                    break;
+                case R.id.call_it:
+                    try {
+                        ((MessageTabFragment)adapter.getItem(0)).getFragment().setText("@"+mChatRoomMember.getNick());
+                        mSendVPopupWindow.dismiss();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    break;
+                case R.id.guanzhu:
+                    Toast.makeText(getActivity(), "guanzhu", Toast.LENGTH_SHORT).show();
+                    break;
+
+                case R.id.gold_100:
+                    if (mGoldPopupWindow != null) {
+                        mGoldPopupWindow.dismiss();
+                        sendMoney(Gold100);
+                    }
+                    break;
+            }
+        }
+    };
+
+    public static final int Gold100 = 100;
+
+    private void sendMoney(int type) {
+        if (type == Gold100) {
+            String YangToken = SharePrefUtil.getString(ct, "YangToken", "");
+            String userId = SharePrefUtil.getString(ct, "userId", "");
+            JsonObject mJsonObject = new JsonObject();
+            mJsonObject.addProperty("amount", 100);
+            mJsonObject.addProperty("currency", "gold");
+            mJsonObject.addProperty("toUserId", mChatRoomMember.getAccount());
+            mJsonObject.addProperty("type", "transfer");
+            mJsonObject.addProperty("fromUserId", userId);
+            mJsonObject.addProperty("from", userId);
+            mNtfinaceApi.sendUserGlod(YangToken, mJsonObject)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            new Action1<OrderBean>() {
+                                @Override
+                                public void call(OrderBean bean) {
+                                    if ("done".equals(bean.state)) {
+                                        Toast.makeText(ct, "打赏成功", Toast.LENGTH_SHORT).show();
+                                        UserInfo mUserInfo = (UserInfo) SharePrefUtil.getObj(ct, "UserInfo");
+                                        String username = "XXX";
+                                        if (mUserInfo != null) {
+                                            username = mUserInfo.getUsername();
+                                        }
+                                        String messageString = username + "打赏" + mChatRoomMember.getNick() + " [100金币]";
+                                        RewardAttachment attachment = new RewardAttachment(messageString);
+                                        IMMessage message = MessageBuilder.createCustomMessage(mChatRoomInfo.getRoomId(), SessionTypeEnum.ChatRoom, messageString, attachment);
+                                        NIMClient.getService(ChatRoomService.class).sendMessage((ChatRoomMessage) message, true);
+                                        try {
+                                            ((MessageTabFragment)adapter.getItem(0)).getFragment().addMessgae(message);
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+
+                                    }
+                                }
+                            }, new Action1<Throwable>() {
+                                @Override
+                                public void call(Throwable throwable) {
+                                    Toast.makeText(ct, throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
+        }
+    }
+
+    //获取金额
+    private void getMoney() {
+        String userId = SharePrefUtil.getString(ct, "userId", "");
+        String YangToken = SharePrefUtil.getString(ct, "YangToken", "");
+        mNtfinaceApi.getUserGlod(userId, "updatedAt DESC", YangToken)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        new Action1<UserGlod>() {
+                            @Override
+                            public void call(UserGlod mUserGlod) {
+                                String s = "金币:" + mUserGlod.getGoldCoins() + ",钻石:" + mUserGlod.getDiamond();
+                                mGoldPopupWindow = new GoldPopupWindow(getActivity(), onClickListener);
+                                mGoldPopupWindow.setText(s);
+                                mGoldPopupWindow.showAtLocation(viewPager, Gravity.CENTER, 0, 0);
+                            }
+                        }, new Action1<Throwable>() {
+                            @Override
+                            public void call(Throwable throwable) {
+                                Toast.makeText(ct, throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+    }
+
+    private ChatRoomMember getChatRoomMemberById(String s) {
+        for (ChatRoomMember bean : UserIcons) {
+            if (s.equals(bean.getAccount())) {
+                return bean;
+            }
+        }
+        return null;
+    }
+
 
     private void setupPager() {
         // CACHE COUNT

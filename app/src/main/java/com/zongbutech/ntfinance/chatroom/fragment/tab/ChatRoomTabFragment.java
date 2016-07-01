@@ -5,7 +5,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.netease.nim.uikit.BaseApplication;
 import com.netease.nim.uikit.common.fragment.TabFragment;
+import com.zongbutech.httplib.http.API.NtfinaceApi;
 import com.zongbutech.ntfinance.R;
 import com.zongbutech.ntfinance.chatroom.constant.ChatRoomTab;
 
@@ -23,6 +25,7 @@ public abstract class ChatRoomTabFragment extends TabFragment {
         return loaded;
     }
 
+    public NtfinaceApi mNtfinaceApi;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.main_tab_fragment_container, container, false);
@@ -31,6 +34,8 @@ public abstract class ChatRoomTabFragment extends TabFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        BaseApplication app = (BaseApplication) getActivity().getApplicationContext();
+        mNtfinaceApi = app.mNtfinaceApi;
     }
 
     public void attachTabData(ChatRoomTab tabData) {

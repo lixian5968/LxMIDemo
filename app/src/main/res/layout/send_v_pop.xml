@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+
+
+    <LinearLayout
+        android:id="@+id/pop_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="#ffffff"
+        android:layout_alignParentBottom="true"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="60dp">
+            <com.netease.nim.uikit.common.ui.imageview.HeadImageView
+                android:id="@+id/mHeadImageView"
+                android:layout_width="50dp"
+                android:layout_height="50dp" />
+
+            <TextView
+                android:id="@+id/mTextViewName"
+                android:layout_margin="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+
+
+        <Button
+            android:id="@+id/send_it"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="送Ta礼物"
+            android:textColor="#0e61aa"
+            android:textSize="18sp" />
+        <Button
+            android:id="@+id/call_it"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Ta"
+            android:textColor="#0e61aa"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/guanzhu"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="关注"
+            android:textColor="#0e61aa"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="取消"
+            android:textColor="#0e61aa"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+</RelativeLayout>
